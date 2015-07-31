@@ -217,7 +217,7 @@ type resources struct {
 
 type slave struct {
 	PID        string    `json:"pid"`
-	Used       resources `json:"user_resources"`
+	Used       resources `json:"used_resources"`
 	Unreserved resources `json:"unreserved_resources"`
 	Total      resources `json:"resources"`
 }
