@@ -172,19 +172,29 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 
 type ranges [][2]uint64
 
-func (rs ranges) UnmarshalJSON(data []byte) error {
-	if len(data) <= 2 {
+func (rs *ranges) UnmarshalJSON(data []byte) (err error) {
+	if data = bytes.Trim(data, `[]"`); len(data) == 0 {
 		return nil
-	} else if data[0] != '[' || data[len(data)-1] != ']' {
-		return fmt.Errorf("failed to parse port range %q", data)
 	}
 
 	var rng [2]uint64
-	for _, r := range bytes.Split(data[1:len(data)-1], []byte(",")) {
-		if err := json.Unmarshal(r, &rng); err != nil {
+	for _, r := range bytes.Split(data, []byte(",")) {
+		ps := bytes.SplitN(r, []byte("-"), 2)
+		if len(ps) != 2 {
+			return fmt.Errorf("bad range: %s", r)
+		}
+
+		rng[0], err = strconv.ParseUint(string(bytes.TrimSpace(ps[0])), 10, 64)
+		if err != nil {
 			return err
 		}
-		rs = append(rs, rng)
+
+		rng[1], err = strconv.ParseUint(string(bytes.TrimSpace(ps[1])), 10, 64)
+		if err != nil {
+			return err
+		}
+
+		*rs = append(*rs, rng)
 	}
 
 	return nil
