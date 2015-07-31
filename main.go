@@ -48,7 +48,7 @@ func newCollector(name string, timeout time.Duration) *collector {
 		metrics: map[*prometheus.GaugeVec]func(*slave, prometheus.Gauge){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
-				Name:      "cpus_total",
+				Name:      "cpus",
 				Namespace: "mesos",
 				Subsystem: "slave",
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Total.CPUs) },
@@ -66,7 +66,7 @@ func newCollector(name string, timeout time.Duration) *collector {
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Unreserved.CPUs) },
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave memory in MB",
-				Name:      "mem_total",
+				Name:      "mem",
 				Namespace: "mesos",
 				Subsystem: "slave",
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Total.Mem) },
@@ -84,7 +84,7 @@ func newCollector(name string, timeout time.Duration) *collector {
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Unreserved.Mem) },
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave disk in MB",
-				Name:      "disk_total",
+				Name:      "disk",
 				Namespace: "mesos",
 				Subsystem: "slave",
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Total.Disk) },
@@ -102,7 +102,7 @@ func newCollector(name string, timeout time.Duration) *collector {
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(s.Unreserved.Disk) },
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave ports",
-				Name:      "ports_total",
+				Name:      "ports",
 				Namespace: "mesos",
 				Subsystem: "slave",
 			}, labels): func(s *slave, g prometheus.Gauge) { g.Set(float64(s.Total.Ports.size())) },
