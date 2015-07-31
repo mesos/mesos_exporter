@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,12 +19,13 @@ import (
 func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
+	port := fs.Int("port", 5050, "Master port")
 	name := fs.String("name", "master.mesos.", "Master leader DNS name")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 
 	fs.Parse(os.Args[1:])
 
-	c := newCollector(*name, *timeout)
+	c := newCollector(*name, *port, *timeout)
 	if err := prometheus.Register(c); err != nil {
 		log.Fatal(err)
 	}
@@ -37,14 +39,16 @@ func main() {
 type collector struct {
 	*http.Client
 	name    string
+	port    int
 	metrics map[*prometheus.GaugeVec]func(*slave, prometheus.Gauge)
 }
 
-func newCollector(name string, timeout time.Duration) *collector {
+func newCollector(name string, port int, timeout time.Duration) *collector {
 	labels := []string{"slave"}
 	return &collector{
 		Client: &http.Client{Timeout: timeout},
 		name:   name,
+		port:   port,
 		metrics: map[*prometheus.GaugeVec]func(*slave, prometheus.Gauge){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
@@ -131,7 +135,11 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 
 	req := &http.Request{
 		Method: "GET",
-		URL:    &url.URL{Scheme: "http", Host: masters[0], Path: "/state.json"},
+		URL: &url.URL{
+			Scheme: "http",
+			Host:   net.JoinHostPort(masters[0], strconv.Itoa(c.port)),
+			Path:   "/state.json",
+		},
 	}
 
 	res, err := c.Do(req)
