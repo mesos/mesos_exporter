@@ -20,7 +20,7 @@ func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
 	port := fs.Int("port", 5050, "Master port")
-	name := fs.String("name", "master.mesos.", "Master leader DNS name")
+	name := fs.String("name", "leader.mesos.", "Leading Mesos master DNS name")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 
 	fs.Parse(os.Args[1:])

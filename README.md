@@ -11,6 +11,6 @@ $ go get github.com/mesosphere/mesos-exporter
 ```sh
 Usage of mesos-exporter:
   -addr=":9110": Address to listen on
-  -name="master.mesos.": Master leader DNS name
+  -name="leader.mesos.": Master leader DNS name
   -timeout=5s: Master polling timeout
 ```
