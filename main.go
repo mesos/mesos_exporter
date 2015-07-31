@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,13 +18,17 @@ import (
 func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
-	port := fs.Int("port", 5050, "Master port")
-	name := fs.String("name", "master.mesos.", "Master leader DNS name")
+	masterURL := fs.String("url", "http://master.mesos.:5050/state.json", "Master URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 
 	fs.Parse(os.Args[1:])
 
-	c := newCollector(*name, *port, *timeout)
+	url, err := url.Parse(*masterURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c := newCollector(url, *timeout)
 	if err := prometheus.Register(c); err != nil {
 		log.Fatal(err)
 	}
@@ -38,17 +41,15 @@ func main() {
 
 type collector struct {
 	*http.Client
-	name    string
-	port    int
+	*url.URL
 	metrics map[prometheus.Collector]func(*slave, prometheus.Collector)
 }
 
-func newCollector(name string, port int, timeout time.Duration) *collector {
+func newCollector(url *url.URL, timeout time.Duration) *collector {
 	labels := []string{"slave"}
 	return &collector{
 		Client: &http.Client{Timeout: timeout},
-		name:   name,
-		port:   port,
+		URL:    url,
 		metrics: map[prometheus.Collector]func(*slave, prometheus.Collector){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
@@ -174,22 +175,7 @@ func newCollector(name string, port int, timeout time.Duration) *collector {
 }
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
-	masters, err := net.LookupHost(c.name)
-	if err != nil || len(masters) == 0 {
-		log.Printf("failed to DNS lookup %s: %s", c.name, err)
-		return
-	}
-
-	req := &http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Scheme: "http",
-			Host:   net.JoinHostPort(masters[0], strconv.Itoa(c.port)),
-			Path:   "/state.json",
-		},
-	}
-
-	res, err := c.Do(req)
+	res, err := c.Do(&http.Request{Method: "GET", URL: c.URL})
 	if err != nil {
 		log.Print(err)
 		return
