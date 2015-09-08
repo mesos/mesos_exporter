@@ -35,7 +35,14 @@ func main() {
 			log.Fatal(err)
 		}
 	case *slaveURL != "":
-		log.Fatal("Not implemented")
+		url, err := url.Parse(*slaveURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+		c := newSlaveCollector(url, *timeout)
+		if err := prometheus.Register(c); err != nil {
+			log.Fatal(err)
+		}
 	default:
 		log.Fatal("Either -master or -slave is required")
 	}
