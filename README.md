@@ -23,5 +23,5 @@ leader and one exporter for each slave with `-slave` pointing to it. In
 a default mesos / DCOS setup, you should be able to run the mesos-exporter
 like this:
 
-- Master: `mesos-exporter -master http://leader.mesos:5050/stats.`
+- Master: `mesos-exporter -master http://leader.mesos:5050/state.json`
 - Slave: `mesos-exporter -slave http://localhost:5051/monitor/statistics.json`
