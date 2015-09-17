@@ -34,6 +34,7 @@ func main() {
 		if err := prometheus.Register(c); err != nil {
 			log.Fatal(err)
 		}
+		log.Printf("Exposing master metrics on %s", *addr)
 	case *slaveURL != "":
 		url, err := url.Parse(*slaveURL)
 		if err != nil {
@@ -43,6 +44,7 @@ func main() {
 		if err := prometheus.Register(c); err != nil {
 			log.Fatal(err)
 		}
+		log.Printf("Exposing slave metrics on %s", *addr)
 	default:
 		log.Fatal("Either -master or -slave is required")
 	}
