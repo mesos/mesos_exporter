@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
 
@@ -25,22 +24,13 @@ func main() {
 
 	switch {
 	case *masterURL != "":
-		url, err := url.Parse(*masterURL)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		c := newMasterCollector(url, *timeout)
+		c := newMasterCollector(*masterURL, *timeout)
 		if err := prometheus.Register(c); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("Exposing master metrics on %s", *addr)
 	case *slaveURL != "":
-		url, err := url.Parse(*slaveURL)
-		if err != nil {
-			log.Fatal(err)
-		}
-		c := newSlaveCollector(url, *timeout)
+		c := newSlaveCollector(*slaveURL, *timeout)
 		if err := prometheus.Register(c); err != nil {
 			log.Fatal(err)
 		}

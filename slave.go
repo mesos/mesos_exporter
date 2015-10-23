@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,8 +39,7 @@ type (
 
 	slaveCollector struct {
 		*http.Client
-		*url.URL
-		errors  *prometheus.Counter
+		url     string
 		metrics map[*prometheus.Desc]metric
 	}
 
@@ -51,11 +49,12 @@ type (
 	}
 )
 
-func newSlaveCollector(url *url.URL, timeout time.Duration) *slaveCollector {
+func newSlaveCollector(url string, timeout time.Duration) *slaveCollector {
 	labels := []string{"id", "framework_id", "source"}
+
 	return &slaveCollector{
 		Client: &http.Client{Timeout: timeout},
-		URL:    url,
+		url:    url,
 		metrics: map[*prometheus.Desc]metric{
 			// CPU
 			prometheus.NewDesc(
@@ -139,10 +138,9 @@ func newSlaveCollector(url *url.URL, timeout time.Duration) *slaveCollector {
 }
 
 func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
-	res, err := http.Get(c.URL.String())
+	res, err := http.Get(c.url + "/monitor/statistics.json")
 	if err != nil {
 		log.Print(err)
-		// c.errors.Inc()
 		return
 	}
 	defer res.Body.Close()
@@ -150,7 +148,6 @@ func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
 	stats := []executor{}
 	if err := json.NewDecoder(res.Body).Decode(&stats); err != nil {
 		log.Print(err)
-		// c.errors.Inc()
 		return
 	}
 
@@ -159,6 +156,14 @@ func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(desc, m.valueType, m.get(exec.Statistics), exec.ID, exec.FrameworkID, exec.Source)
 		}
 	}
+
+	res, err = http.Get(c.url + "/metrics/snapshot")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	defer res.Body.Close()
+	snapshotCollect(ch, res.Body)
 }
 
 func (c *slaveCollector) Describe(ch chan<- *prometheus.Desc) {

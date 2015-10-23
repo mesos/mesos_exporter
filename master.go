@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -63,16 +62,16 @@ type (
 
 	masterCollector struct {
 		*http.Client
-		*url.URL
+		url     string
 		metrics map[prometheus.Collector]func(*state, prometheus.Collector)
 	}
 )
 
-func newMasterCollector(url *url.URL, timeout time.Duration) *masterCollector {
+func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 	labels := []string{"slave"}
 	return &masterCollector{
 		Client: &http.Client{Timeout: timeout},
-		URL:    url,
+		url:    url,
 		metrics: map[prometheus.Collector]func(*state, prometheus.Collector){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
@@ -228,7 +227,7 @@ func newMasterCollector(url *url.URL, timeout time.Duration) *masterCollector {
 }
 
 func (c *masterCollector) Collect(ch chan<- prometheus.Metric) {
-	res, err := c.Do(&http.Request{Method: "GET", URL: c.URL})
+	res, err := c.Get(c.url + "/state.json")
 	if err != nil {
 		log.Print(err)
 		return
@@ -245,6 +244,14 @@ func (c *masterCollector) Collect(ch chan<- prometheus.Metric) {
 		set(&s, c)
 		c.Collect(ch)
 	}
+
+	res, err = c.Get(c.url + "/metrics/snapshot")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	defer res.Body.Close()
+	snapshotCollect(ch, res.Body)
 }
 
 func (c *masterCollector) Describe(ch chan<- *prometheus.Desc) {
