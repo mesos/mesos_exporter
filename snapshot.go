@@ -19,7 +19,7 @@ func snapshotCollect(ch chan<- prometheus.Metric, r io.Reader) {
 	}
 
 	for name, value := range metrics {
-		mn := strings.Join(append([]string{"mesos_master"}, strings.Split(name, "/")...), "_")
+		mn := strings.Join(append([]string{"mesos"}, strings.Split(name, "/")...), "_")
 		desc := prometheus.NewDesc(mn, "Exposed from /metrics/snapshot", nil, nil)
 		ch <- prometheus.MustNewConstMetric(desc, prometheus.UntypedValue, value)
 	}
