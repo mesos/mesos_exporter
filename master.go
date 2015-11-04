@@ -75,9 +75,9 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 		metrics: map[prometheus.Collector]func(*state, prometheus.Collector){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
-				Name:      "cpus",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "cpus",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Total.CPUs)
@@ -85,9 +85,9 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Used slave CPUs (fractional)",
-				Name:      "cpus_used",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "cpus_used",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Used.CPUs)
@@ -95,79 +95,79 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Unreserved slave CPUs (fractional)",
-				Name:      "cpus_unreserved",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "cpus_unreserved",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Unreserved.CPUs)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Total slave memory in MB",
-				Name:      "mem",
+				Help:      "Total slave memory in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "mem_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Total.Mem)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Total.Mem * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Used slave memory in MB",
-				Name:      "mem_used",
+				Help:      "Used slave memory in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "mem_used_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Used.Mem)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Used.Mem * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Unreserved slave memory in MB",
-				Name:      "mem_unreserved",
+				Help:      "Unreserved slave memory in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "mem_unreserved_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Unreserved.Mem)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Unreserved.Mem * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Total slave disk in MB",
-				Name:      "disk",
+				Help:      "Total slave disk space in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "disk_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Total.Disk)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Total.Disk * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Used slave disk in MB",
-				Name:      "disk_used",
+				Help:      "Used slave disk space in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "disk_used_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Used.Disk)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Used.Disk * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
-				Help:      "Unreserved slave disk in MB",
-				Name:      "disk_unreserved",
+				Help:      "Unreserved slave disk in bytes",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "disk_unreserved_bytes",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
-					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Unreserved.Disk)
+					c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(s.Unreserved.Disk * 1024)
 				}
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave ports",
-				Name:      "ports",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "ports",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					size := s.Total.Ports.size()
@@ -176,9 +176,9 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Used slave ports",
-				Name:      "ports_used",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "ports_used",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					size := s.Used.Ports.size()
@@ -187,9 +187,9 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Unreserved slave ports",
-				Name:      "ports_unreserved",
 				Namespace: "mesos",
 				Subsystem: "slave",
+				Name:      "ports_unreserved",
 			}, labels): func(st *state, c prometheus.Collector) {
 				for _, s := range st.Slaves {
 					size := s.Unreserved.Ports.size()
@@ -198,10 +198,10 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 			},
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Framework tasks",
-				Name:      "tasks",
 				Namespace: "mesos",
 				Subsystem: "slave",
-			}, []string{"slave", "executor", "name", "framework", "timestamp", "state"}): func(st *state, c prometheus.Collector) {
+				Name:      "task_state_time",
+			}, []string{"slave", "task", "executor", "name", "framework", "state"}): func(st *state, c prometheus.Collector) {
 				for _, f := range st.Frameworks {
 					if !f.Active {
 						continue
@@ -210,14 +210,14 @@ func newMasterCollector(url string, timeout time.Duration) *masterCollector {
 					for _, task := range tasks {
 						for _, status := range task.Statuses {
 							values := []string{
+								task.ID,
 								task.SlaveID,
 								task.ExecutorID,
 								task.Name,
 								task.FrameworkID,
-								strconv.FormatFloat(status.Timestamp, 'f', -1, 64),
 								status.State,
 							}
-							c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(float64(len(tasks)))
+							c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(status.Timestamp)
 						}
 					}
 				}
