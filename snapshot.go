@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"strings"
@@ -11,16 +12,272 @@ import (
 
 type snapshotMetrics map[string]float64
 
-func snapshotCollect(ch chan<- prometheus.Metric, r io.Reader) {
-	var metrics snapshotMetrics
-	if err := json.NewDecoder(r).Decode(&metrics); err != nil {
+// type metricGenerators map[prometheus.Collector]func(snapshotMetrics, prometheus.Collector)
+
+var (
+	notFoundInMap = errors.New("Couldn't find key in map")
+	metrics       = map[string]map[prometheus.Collector]func(snapshotMetrics, prometheus.Collector) error{
+		"master": map[prometheus.Collector]func(snapshotMetrics, prometheus.Collector) error{
+			// CPU/Disk/Mem resources in free/used
+			gauge("master", "cpus", "Current CPU resources in cluster.", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				total, ok := m["master/cpus_total"]
+				used, ok := m["master/cpus_used"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+				c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+				return nil
+			},
+			gauge("master", "cpus_revocable", "Current revocable CPU resources in cluster.", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				total, ok := m["master/cpus_revocable_total"]
+				used, ok := m["master/cpus_revocable_used"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+				c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+				return nil
+			},
+			gauge("master", "mem", "Current memory resources in cluster.", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				total, ok := m["master/mem_total"]
+				used, ok := m["master/mem_used"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+				c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+				return nil
+			},
+			gauge("master", "disk", "Current disk resources in cluster.", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				total, ok := m["master/disk_total"]
+				used, ok := m["master/disk_used"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+				c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+				return nil
+			},
+
+			// Master stats about agents
+			counter("master", "slave_registration_events_total", "Total number of registration events on this master since it booted.", "event"): func(m snapshotMetrics, c prometheus.Collector) error {
+				registrations, ok := m["master/slave_registrations"]
+				reregistrations, ok := m["master/slave_reregistrations"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.CounterVec).WithLabelValues("register").Set(registrations)
+				c.(*prometheus.CounterVec).WithLabelValues("reregister").Set(reregistrations)
+				return nil
+			},
+
+			counter("master", "slave_removal_events_total", "Total number of removal events on this master since it booted.", "event"): func(m snapshotMetrics, c prometheus.Collector) error {
+				scheduled, ok := m["master/slave_shutdowns_scheduled"]
+				canceled, ok := m["master/slave_shutdowns_canceled"]
+				completed, ok := m["master/slave_shutdowns_completed"]
+				removals, ok := m["master/slave_removals"]
+				if !ok {
+					return notFoundInMap
+				}
+
+				c.(*prometheus.CounterVec).WithLabelValues("scheduled").Set(scheduled)
+				c.(*prometheus.CounterVec).WithLabelValues("canceled").Set(canceled)
+				c.(*prometheus.CounterVec).WithLabelValues("completed").Set(completed)
+				c.(*prometheus.CounterVec).WithLabelValues("died").Set(removals - completed)
+				return nil
+			},
+			gauge("master", "slaves_state", "Current number of slaves known to the master per connection and registration state.", "connection_state", "registration_state"): func(m snapshotMetrics, c prometheus.Collector) error {
+				active, ok := m["master/slaves_active"]
+				inactive, ok := m["master/slaves_inactive"]
+				disconnected, ok := m["master/slaves_disconnected"]
+
+				if !ok {
+					return notFoundInMap
+				}
+				// FIXME: Make sure those assumptions are right
+				// Every "active" node is connected to the master
+				c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
+				// Every "inactive" node is connected but node sending offers
+				c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
+				// Every "disconnected" node is "inactive"
+				c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
+				// Every "connected" node is either active or inactive
+				return nil
+			},
+
+			// Master stats about frameworks
+			gauge("master", "frameworks_state", "Current number of frames known to the master per connection and registration state.", "connection_state", "registration_state"): func(m snapshotMetrics, c prometheus.Collector) error {
+				active, ok := m["master/frameworks_active"]
+				inactive, ok := m["master/frameworks_inactive"]
+				disconnected, ok := m["master/frameworks_disconnected"]
+
+				if !ok {
+					return notFoundInMap
+				}
+				// FIXME: Make sure those assumptions are right
+				// Every "active" framework is connected to the master
+				c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
+				// Every "inactive" framework is connected but framework sending offers
+				c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
+				// Every "disconnected" framework is "inactive"
+				c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
+				// Every "connected" framework is either active or inactive
+				return nil
+			},
+			prometheus.NewGauge(prometheus.GaugeOpts{
+				Namespace: "mesos",
+				Subsystem: "master",
+				Name:      "offers_pending",
+				Help:      "Current number of offers made by the master which aren't yet accepted or declined by frameworks.",
+			}): func(m snapshotMetrics, c prometheus.Collector) error {
+				offers, ok := m["master/outstanding_offers"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(prometheus.Gauge).Set(offers)
+				// c.(*prometheus.Gauge).Set(offers)
+				return nil
+			},
+			// Master stats about tasks
+			counter("master", "task_states_exit_total", "Total number of tasks processed by exit state.", "state"): func(m snapshotMetrics, c prometheus.Collector) error {
+				errored, ok := m["master/tasks_error"]
+				failed, ok := m["master/tasks_failed"]
+				finished, ok := m["master/tasks_finished"]
+				killed, ok := m["master/tasks_killed"]
+				lost, ok := m["master/tasks_lost"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.CounterVec).WithLabelValues("errored").Set(errored)
+				c.(*prometheus.CounterVec).WithLabelValues("failed").Set(failed)
+				c.(*prometheus.CounterVec).WithLabelValues("finished").Set(finished)
+				c.(*prometheus.CounterVec).WithLabelValues("killed").Set(killed)
+				c.(*prometheus.CounterVec).WithLabelValues("lost").Set(lost)
+				return nil
+			},
+			counter("master", "task_states_current", "Current number of tasks by state.", "state"): func(m snapshotMetrics, c prometheus.Collector) error {
+				running, ok := m["master/tasks_running"]
+				staging, ok := m["master/tasks_staging"]
+				starting, ok := m["master/tasks_starting"]
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.CounterVec).WithLabelValues("running").Set(running)
+				c.(*prometheus.CounterVec).WithLabelValues("staging").Set(staging)
+				c.(*prometheus.CounterVec).WithLabelValues("starting").Set(starting)
+				return nil
+			},
+
+			// Master stats about messages
+			counter("master", "messages_outcomes_total",
+				"Total number of messages by outcome of operation and direction.",
+				"source", "destination", "type", "outcome"): func(m snapshotMetrics, c prometheus.Collector) error {
+				frameworkToExecutorValid, ok := m["master/valid_framework_to_executor_messages"]
+				frameworkToExecutorInvalid, ok := m["master/invalid_framework_to_executor_messages"]
+				executorToFrameworkValid, ok := m["master/valid_executor_to_framework_messages"]
+				executorToFrameworkInvalid, ok := m["master/invalid_executor_to_framework_messages"]
+
+				// status updates are sent from framework?(FIXME) to slave
+				// status update acks are sent from slave to framework?
+				statusUpdateAckValid, ok := m["master/valid_status_update_acknowledgements"]
+				statusUpdateAckInvalid, ok := m["master/invalid_status_update_acknowledgements"]
+				statusUpdateValid, ok := m["master/valid_status_updates"]
+				statusUpdateInvalid, ok := m["master/invalid_status_updates"]
+
+				if !ok {
+					return notFoundInMap
+				}
+				c.(*prometheus.CounterVec).WithLabelValues("framework", "executor", "", "valid").Set(frameworkToExecutorValid)
+				c.(*prometheus.CounterVec).WithLabelValues("framework", "executor", "", "invalid").Set(frameworkToExecutorInvalid)
+
+				c.(*prometheus.CounterVec).WithLabelValues("executor", "framework", "", "valid").Set(executorToFrameworkValid)
+				c.(*prometheus.CounterVec).WithLabelValues("executor", "framework", "", "invalid").Set(executorToFrameworkInvalid)
+
+				// We consider a ack message simply as a message from slave to framework
+				c.(*prometheus.CounterVec).WithLabelValues("framework", "slave", "status_update", "valid").Set(statusUpdateValid)
+				c.(*prometheus.CounterVec).WithLabelValues("framework", "slave", "status_update", "invalid").Set(statusUpdateInvalid)
+				c.(*prometheus.CounterVec).WithLabelValues("slave", "framework", "status_update", "valid").Set(statusUpdateAckValid)
+				c.(*prometheus.CounterVec).WithLabelValues("slave", "framework", "status_update", "invalid").Set(statusUpdateAckInvalid)
+				return nil
+			},
+			counter("master", "messages_type_total", "Total number of valid messages by type.", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				for k, v := range m {
+					i := strings.Index("master/messages_", k)
+					if i == -1 {
+						continue
+					}
+					// FIXME: We expose things like messages_framework_to_executor twice
+					c.(*prometheus.CounterVec).WithLabelValues(k[i:]).Set(v)
+				}
+				return nil
+			},
+
+			// Master stats about events
+			gauge("master", "event_queue_length", "Current number of elements in event queue by type", "type"): func(m snapshotMetrics, c prometheus.Collector) error {
+				dispatches, ok := m["master/event_queue_dispatches"]
+				httpRequests, ok := m["master/event_queue_http_requests"]
+				messages, ok := m["master/event_queue_messages"]
+				if !ok {
+					return notFoundInMap
+				}
+
+				c.(*prometheus.GaugeVec).WithLabelValues("message").Set(messages)
+				c.(*prometheus.GaugeVec).WithLabelValues("http_request").Set(httpRequests)
+				c.(*prometheus.GaugeVec).WithLabelValues("dispatches").Set(dispatches)
+				return nil
+			},
+
+			// Master stats about registrar
+			prometheus.NewHistogram(prometheus.HistogramOpts{
+				Namespace: "mesos",
+				Subsystem: "master",
+				Name:      "state_store_seconds",
+			}): func(m snapshotMetrics, c prometheus.Collector) error {
+				//	c.(*prometheus.Histogram).Buckets //FIXME
+				return nil
+			},
+		},
+		// "slave": map[prometheus.Collector]func(m snapshotMetrics, prometheus.Collector){},
+	}
+)
+
+func gauge(name, subsystem, help string, labels ...string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "mesos",
+		Subsystem: subsystem,
+		Name:      name,
+		Help:      help,
+	}, labels)
+}
+
+func counter(name, subsystem, help string, labels ...string) *prometheus.CounterVec {
+	return prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "mesos",
+		Subsystem: subsystem,
+		Name:      name,
+		Help:      help,
+	}, labels)
+}
+
+func snapshotCollect(ch chan<- prometheus.Metric, nodeType string, r io.Reader) {
+	var m snapshotMetrics
+	if err := json.NewDecoder(r).Decode(&m); err != nil {
 		log.Print(err)
 		return
 	}
 
-	for name, value := range metrics {
-		mn := strings.Join(append([]string{"mesos"}, strings.Split(name, "/")...), "_")
-		desc := prometheus.NewDesc(mn, "Exposed from /metrics/snapshot", nil, nil)
-		ch <- prometheus.MustNewConstMetric(desc, prometheus.UntypedValue, value)
+	for c, f := range metrics[nodeType] {
+		if err := f(m, c); err != nil {
+			if err == notFoundInMap {
+				ch := make(chan *prometheus.Desc, 1)
+				c.Describe(ch)
+				log.Printf("Couldn't find fields required to update %s\n", <-ch)
+			} else {
+				log.Println(err)
+			}
+			continue
+		}
+		c.Collect(ch)
 	}
 }

@@ -163,7 +163,7 @@ func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	defer res.Body.Close()
-	snapshotCollect(ch, res.Body)
+	snapshotCollect(ch, "slave", res.Body)
 }
 
 func (c *slaveCollector) Describe(ch chan<- *prometheus.Desc) {
