@@ -10,6 +10,17 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+var errorCounter = prometheus.NewCounter(prometheus.CounterOpts{
+	Namespace: "mesos",
+	Subsystem: "collector",
+	Name:      "errors_total",
+	Help:      "Total number of internal mesos-collector errors.",
+})
+
+func init() {
+	prometheus.MustRegister(errorCounter)
+}
+
 func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
@@ -24,20 +35,24 @@ func main() {
 
 	switch {
 	case *masterURL != "":
-		if err := prometheus.Register(newMasterCollector(*masterURL, *timeout)); err != nil {
-			log.Fatal(err)
-		}
-
-		if err := prometheus.Register(newMasterStateCollector(*masterURL, *timeout)); err != nil {
-			log.Fatal(err)
+		for _, c := range []prometheus.Collector{
+			newMasterCollector(*masterURL, *timeout),
+			newMasterStateCollector(*masterURL, *timeout),
+		} {
+			if err := prometheus.Register(c); err != nil {
+				log.Fatal(err)
+			}
 		}
 		log.Printf("Exposing master metrics on %s", *addr)
+
 	case *slaveURL != "":
-		if err := prometheus.Register(newSlaveCollector(*slaveURL, *timeout)); err != nil {
-			log.Fatal(err)
-		}
-		if err := prometheus.Register(newSlaveMonitorCollector(*slaveURL, *timeout)); err != nil {
-			log.Fatal(err)
+		for _, c := range []prometheus.Collector{
+			newSlaveCollector(*slaveURL, *timeout),
+			newSlaveMonitorCollector(*slaveURL, *timeout),
+		} {
+			if err := prometheus.Register(c); err != nil {
+				log.Fatal(err)
+			}
 		}
 		log.Printf("Exposing slave metrics on %s", *addr)
 

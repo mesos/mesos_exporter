@@ -206,19 +206,17 @@ func newMasterStateCollector(url string, timeout time.Duration) *masterCollector
 					if !f.Active {
 						continue
 					}
-					tasks := f.tasks()
-					for _, task := range tasks {
-						for _, status := range task.Statuses {
-							values := []string{
-								task.ID,
-								task.SlaveID,
-								task.ExecutorID,
-								task.Name,
-								task.FrameworkID,
-								status.State,
-							}
-							c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(status.Timestamp)
+					for _, task := range f.Completed {
+						log.Printf("%#v", task)
+						values := []string{
+							task.ID,
+							task.SlaveID,
+							task.ExecutorID,
+							task.Name,
+							task.FrameworkID,
+							task.State,
 						}
+						c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(task.Statuses[0].Timestamp)
 					}
 				}
 			},
@@ -288,11 +286,4 @@ func (rs ranges) size() uint64 {
 		sz += 1 + (rs[i][1] - rs[i][0])
 	}
 	return sz
-}
-
-func (f framework) tasks() []task {
-	tasks := make([]task, len(f.Tasks)+len(f.Completed))
-	tasks = append(tasks, f.Tasks...)
-	tasks = append(tasks, f.Completed...)
-	return tasks
 }

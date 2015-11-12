@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 	"time"
 
@@ -231,10 +230,5 @@ func newMasterCollector(url string, timeout time.Duration) *metricCollector {
 			return nil
 		},
 	}
-
-	return &metricCollector{
-		Client:  &http.Client{Timeout: timeout},
-		url:     url,
-		metrics: metrics,
-	}
+	return newMetricCollector(url, timeout, metrics)
 }

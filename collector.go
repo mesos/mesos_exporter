@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -15,7 +16,7 @@ var (
 	notFoundInMap = errors.New("Couldn't find key in map")
 )
 
-func gauge(name, subsystem, help string, labels ...string) *prometheus.GaugeVec {
+func gauge(subsystem, name, help string, labels ...string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "mesos",
 		Subsystem: subsystem,
@@ -24,7 +25,7 @@ func gauge(name, subsystem, help string, labels ...string) *prometheus.GaugeVec 
 	}, labels)
 }
 
-func counter(name, subsystem, help string, labels ...string) *prometheus.CounterVec {
+func counter(subsystem, name, help string, labels ...string) *prometheus.CounterVec {
 	return prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "mesos",
 		Subsystem: subsystem,
@@ -39,9 +40,10 @@ type metricCollector struct {
 	metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error
 }
 
-func newMetricCollector(url string, metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error) *metricCollector {
+func newMetricCollector(url string, timeout time.Duration, metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error) *metricCollector {
 	return &metricCollector{
 		url:     url,
+		Client:  &http.Client{Timeout: timeout},
 		metrics: metrics,
 	}
 }
@@ -50,6 +52,7 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 	res, err := c.Get(c.url + "/metrics/snapshot")
 	if err != nil {
 		log.Print(err)
+		errorCounter.Inc()
 		return
 	}
 	defer res.Body.Close()
@@ -57,6 +60,7 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 	var m metricMap
 	if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
 		log.Print(err)
+		errorCounter.Inc()
 		return
 	}
 
@@ -64,11 +68,12 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 		if err := f(m, cm); err != nil {
 			if err == notFoundInMap {
 				ch := make(chan *prometheus.Desc, 1)
-				c.Describe(ch)
+				cm.Describe(ch)
 				log.Printf("Couldn't find fields required to update %s\n", <-ch)
 			} else {
 				log.Println(err)
 			}
+			errorCounter.Inc()
 			continue
 		}
 		cm.Collect(ch)
