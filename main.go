@@ -24,17 +24,23 @@ func main() {
 
 	switch {
 	case *masterURL != "":
-		c := newMasterCollector(*masterURL, *timeout)
-		if err := prometheus.Register(c); err != nil {
+		if err := prometheus.Register(newMasterCollector(*masterURL, *timeout)); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := prometheus.Register(newMasterStateCollector(*masterURL, *timeout)); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("Exposing master metrics on %s", *addr)
 	case *slaveURL != "":
-		c := newSlaveCollector(*slaveURL, *timeout)
-		if err := prometheus.Register(c); err != nil {
+		if err := prometheus.Register(newSlaveCollector(*slaveURL, *timeout)); err != nil {
+			log.Fatal(err)
+		}
+		if err := prometheus.Register(newSlaveMonitorCollector(*slaveURL, *timeout)); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("Exposing slave metrics on %s", *addr)
+
 	default:
 		log.Fatal("Either -master or -slave is required")
 	}
