@@ -40,6 +40,16 @@ func newMasterCollector(url string, timeout time.Duration) *metricCollector {
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
 		},
+		gauge("master", "mem_revocable", "Current revocable memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
+			total, ok := m["master/mem_revocable_total"]
+			used, ok := m["master/mem_revocable_used"]
+			if !ok {
+				return notFoundInMap
+			}
+			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+			return nil
+		},
 		gauge("master", "disk", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/disk_total"]
 			used, ok := m["master/disk_used"]
@@ -50,7 +60,44 @@ func newMasterCollector(url string, timeout time.Duration) *metricCollector {
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
 		},
+		gauge("master", "disk_revocable", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
+			total, ok := m["master/disk_revocable_total"]
+			used, ok := m["master/disk_revocable_used"]
+			if !ok {
+				return notFoundInMap
+			}
+			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+			return nil
+		},
 
+		// Master stats about uptime and election state
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "elected",
+			Help:      "1 if master is elected leader, 0 if not",
+		}): func(m metricMap, c prometheus.Collector) error {
+			elected, ok := m["master/elected"]
+			if !ok {
+				return notFoundInMap
+			}
+			c.(prometheus.Gauge).Set(elected)
+			return nil
+		},
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "uptime_seconds",
+			Help:      "Number of seconds the master process is running.",
+		}): func(m metricMap, c prometheus.Collector) error {
+			uptime, ok := m["master/uptime_secs"]
+			if !ok {
+				return notFoundInMap
+			}
+			c.(prometheus.Gauge).Set(uptime)
+			return nil
+		},
 		// Master stats about agents
 		counter("master", "slave_registration_events_total", "Total number of registration events on this master since it booted.", "event"): func(m metricMap, c prometheus.Collector) error {
 			registrations, ok := m["master/slave_registrations"]

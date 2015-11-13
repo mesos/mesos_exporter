@@ -207,7 +207,6 @@ func newMasterStateCollector(url string, timeout time.Duration) *masterCollector
 						continue
 					}
 					for _, task := range f.Completed {
-						log.Printf("%#v", task)
 						values := []string{
 							task.ID,
 							task.SlaveID,
