@@ -14,7 +14,7 @@ metrics from a slave.
 Usage of mesos-exporter:
   -addr=":9110": Address to listen on
   -master="": Expose metrics from master running on this URL
-  -slave="": Expose metrics from slave running on t his URL
+  -slave="": Expose metrics from slave running on this URL
   -timeout=5s: Master polling timeout
 ```
 
