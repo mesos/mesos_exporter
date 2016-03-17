@@ -215,7 +215,9 @@ func newMasterStateCollector(url string, timeout time.Duration) *masterCollector
 							task.FrameworkID,
 							task.State,
 						}
-						c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(task.Statuses[0].Timestamp)
+						if len(task.Statuses) > 0 {
+							c.(*prometheus.GaugeVec).WithLabelValues(values...).Set(task.Statuses[0].Timestamp)
+						}
 					}
 				}
 			},
