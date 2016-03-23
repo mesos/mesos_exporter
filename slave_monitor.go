@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -138,16 +139,17 @@ func newSlaveMonitorCollector(url string, timeout time.Duration) *slaveCollector
 }
 
 func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
-	res, err := http.Get(c.url + "/monitor/statistics.json")
+	u := strings.TrimSuffix(c.url, "/") + "/monitor/statistics"
+	res, err := c.Get(u)
 	if err != nil {
-		log.Print(err)
+		log.Printf("Error fetching %s: %s", u, err)
 		return
 	}
 	defer res.Body.Close()
 
 	stats := []executor{}
 	if err := json.NewDecoder(res.Body).Decode(&stats); err != nil {
-		log.Print(err)
+		log.Print("Error decoding response body from %s: %s", err)
 		return
 	}
 
