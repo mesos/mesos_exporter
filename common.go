@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -49,9 +50,10 @@ func newMetricCollector(url string, timeout time.Duration, metrics map[prometheu
 }
 
 func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
-	res, err := c.Get(c.url + "/metrics/snapshot")
+	u := strings.TrimSuffix(c.url, "/") + "/metrics/snapshot"
+	res, err := c.Get(u)
 	if err != nil {
-		log.Print(err)
+		log.Printf("Error fetching %s: %s", u, err)
 		errorCounter.Inc()
 		return
 	}
@@ -59,7 +61,7 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 
 	var m metricMap
 	if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
-		log.Print(err)
+		log.Print("Error decoding response body from %s: %s", err)
 		errorCounter.Inc()
 		return
 	}
@@ -71,7 +73,7 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 				cm.Describe(ch)
 				log.Printf("Couldn't find fields required to update %s\n", <-ch)
 			} else {
-				log.Println(err)
+				log.Printf("Error extracting metric: %s", err)
 			}
 			errorCounter.Inc()
 			continue

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -226,16 +227,17 @@ func newMasterStateCollector(url string, timeout time.Duration) *masterCollector
 }
 
 func (c *masterCollector) Collect(ch chan<- prometheus.Metric) {
-	res, err := c.Get(c.url + "/state.json")
+	u := strings.TrimSuffix(c.url, "/") + "/state"
+	res, err := c.Get(u)
 	if err != nil {
-		log.Print(err)
+		log.Printf("Error fetching %s: %s", u, err)
 		return
 	}
 	defer res.Body.Close()
 
 	var s state
 	if err := json.NewDecoder(res.Body).Decode(&s); err != nil {
-		log.Print(err)
+		log.Print("Error decoding response body from %s: %s", err)
 		return
 	}
 
