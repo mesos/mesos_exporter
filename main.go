@@ -35,7 +35,7 @@ func main() {
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
-	ignoreFrameworkTasks := fs.Bool("ignoreFrameworkTasks", false, "Don't export task_state_time metric");
+	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric");
 
 	fs.Parse(os.Args[1:])
 	if *masterURL != "" && *slaveURL != "" {
@@ -52,7 +52,7 @@ func main() {
 		for _, f := range []func(*httpClient) prometheus.Collector{
 			newMasterCollector,
 			func(c *httpClient) prometheus.Collector {
-				return newMasterStateCollector(c, *ignoreFrameworkTasks)
+				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks)
 			},
 		} {
 			c := f(mkHttpClient(*masterURL, *timeout, auth));
