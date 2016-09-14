@@ -34,9 +34,15 @@ func counter(subsystem, name, help string, labels ...string) *prometheus.Counter
 	}, labels)
 }
 
+type authInfo struct {
+	username string
+	password string
+}
+
 type httpClient struct {
 	http.Client
-	url string
+	url  string
+	auth authInfo
 }
 
 type metricCollector struct {
@@ -50,7 +56,15 @@ func newMetricCollector(httpClient *httpClient, metrics map[prometheus.Collector
 
 func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}) bool {
 	url := strings.TrimSuffix(httpClient.url, "/") + endpoint
-	res, err := httpClient.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Printf("Error creating HTTP request to %s: %s", url, err)
+		return false
+	}
+	if (httpClient.auth.username != "" && httpClient.auth.password != "") {
+		req.SetBasicAuth(httpClient.auth.username, httpClient.auth.password)
+	}
+	res, err := httpClient.Do(req)
 	if err != nil {
 		log.Printf("Error fetching %s: %s", url, err)
 		errorCounter.Inc()

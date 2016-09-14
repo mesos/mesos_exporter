@@ -21,10 +21,11 @@ func init() {
 	prometheus.MustRegister(errorCounter)
 }
 
-func mkHttpClient(url string, timeout time.Duration) *httpClient {
+func mkHttpClient(url string, timeout time.Duration, auth authInfo) *httpClient {
 	return &httpClient{
 		http.Client{Timeout: timeout},
 		url,
+		auth,
 	}
 }
 
@@ -40,13 +41,18 @@ func main() {
 		log.Fatal("Only -master or -slave can be given at a time")
 	}
 
+	auth := authInfo{
+		os.Getenv("MESOS_EXPORTER_USERNAME"),
+		os.Getenv("MESOS_EXPORTER_PASSWORD"),
+	}
+
 	switch {
 	case *masterURL != "":
 		for _, f := range []func(*httpClient) prometheus.Collector{
 			newMasterCollector,
 			newMasterStateCollector,
 		} {
-			c := f(mkHttpClient(*masterURL, *timeout));
+			c := f(mkHttpClient(*masterURL, *timeout, auth));
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
@@ -58,7 +64,7 @@ func main() {
 			newSlaveCollector,
 			newSlaveMonitorCollector,
 		} {
-			c := f(mkHttpClient(*slaveURL, *timeout));
+			c := f(mkHttpClient(*slaveURL, *timeout, auth));
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
