@@ -17,6 +17,7 @@ import (
 
 type (
 	slaveFramework struct {
+		ID        string     `json:"ID"`
 		Executors []executor `json:"executors"`
 	}
 
@@ -75,8 +76,8 @@ func newSlaveStateCollector(url string, timeout time.Duration, userTaskLabelList
 						// Default labels
 						taskLabels := map[string]string{
 							"source": e.Source,
-							"framework_id": t.FrameworkID,
-							"executor_id": t.ID,
+							"framework_id": f.ID,
+							"executor_id": e.ID,
 						}
 						// User labels
 						for _, label := range t.Labels {
