@@ -2,13 +2,8 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -62,17 +57,15 @@ type (
 	}
 
 	masterCollector struct {
-		*http.Client
-		url     string
+		*httpClient
 		metrics map[prometheus.Collector]func(*state, prometheus.Collector)
 	}
 )
 
-func newMasterStateCollector(url string, timeout time.Duration) *masterCollector {
+func newMasterStateCollector(httpClient *httpClient) prometheus.Collector {
 	labels := []string{"slave"}
 	return &masterCollector{
-		Client: &http.Client{Timeout: timeout},
-		url:    url,
+		httpClient: httpClient,
 		metrics: map[prometheus.Collector]func(*state, prometheus.Collector){
 			prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Help:      "Total slave CPUs (fractional)",
@@ -227,19 +220,8 @@ func newMasterStateCollector(url string, timeout time.Duration) *masterCollector
 }
 
 func (c *masterCollector) Collect(ch chan<- prometheus.Metric) {
-	u := strings.TrimSuffix(c.url, "/") + "/state"
-	res, err := c.Get(u)
-	if err != nil {
-		log.Printf("Error fetching %s: %s", u, err)
-		return
-	}
-	defer res.Body.Close()
-
 	var s state
-	if err := json.NewDecoder(res.Body).Decode(&s); err != nil {
-		log.Print("Error decoding response body from %s: %s", err)
-		return
-	}
+	c.fetchAndDecode("/state", &s)
 
 	for c, set := range c.metrics {
 		set(&s, c)
