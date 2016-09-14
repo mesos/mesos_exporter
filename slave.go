@@ -137,6 +137,19 @@ func newSlaveCollector(url string, timeout time.Duration) *metricCollector {
 			c.(prometheus.Counter).Set(terminated)
 			return nil
 		},
+		prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "mesos",
+			Subsystem: "slave",
+			Name:      "executors_preempted",
+			Help:      "Total number of executor preemptions.",
+		}): func(m metricMap, c prometheus.Collector) error {
+			preempted, ok := m["slave/executors_preempted"]
+			if !ok {
+				return notFoundInMap
+			}
+			c.(prometheus.Counter).Set(preempted)
+			return nil
+		},
 
 		// Slave stats about tasks
 		counter("slave", "task_states_exit_total", "Total number of tasks processed by exit state.", "state"): func(m metricMap, c prometheus.Collector) error {
