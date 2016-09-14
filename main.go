@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -27,6 +28,7 @@ func main() {
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on t his URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
+	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the task_labels metric")
 
 	fs.Parse(os.Args[1:])
 	if *masterURL != "" && *slaveURL != "" {
@@ -46,10 +48,16 @@ func main() {
 		log.Printf("Exposing master metrics on %s", *addr)
 
 	case *slaveURL != "":
-		for _, c := range []prometheus.Collector{
+		slaveCollectors := []prometheus.Collector{
 			newSlaveCollector(*slaveURL, *timeout),
 			newSlaveMonitorCollector(*slaveURL, *timeout),
-		} {
+		}
+		if *exportedTaskLabels != "" {
+			slaveLabels := strings.Split(*exportedTaskLabels, ",");
+			slaveCollectors = append(slaveCollectors, newSlaveStateCollector(*slaveURL, *timeout, slaveLabels))
+		}
+
+		for _, c := range slaveCollectors {
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
