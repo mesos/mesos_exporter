@@ -33,7 +33,7 @@ func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
-	slaveURL := fs.String("slave", "", "Expose metrics from slave running on t his URL")
+	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 
 	fs.Parse(os.Args[1:])
