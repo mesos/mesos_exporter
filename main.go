@@ -21,6 +21,14 @@ func init() {
 	prometheus.MustRegister(errorCounter)
 }
 
+func mkHttpClient(url string, timeout time.Duration, auth authInfo) *httpClient {
+	return &httpClient{
+		http.Client{Timeout: timeout},
+		url,
+		auth,
+	}
+}
+
 func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
@@ -33,12 +41,18 @@ func main() {
 		log.Fatal("Only -master or -slave can be given at a time")
 	}
 
+	auth := authInfo{
+		os.Getenv("MESOS_EXPORTER_USERNAME"),
+		os.Getenv("MESOS_EXPORTER_PASSWORD"),
+	}
+
 	switch {
 	case *masterURL != "":
-		for _, c := range []prometheus.Collector{
-			newMasterCollector(*masterURL, *timeout),
-			newMasterStateCollector(*masterURL, *timeout),
+		for _, f := range []func(*httpClient) prometheus.Collector{
+			newMasterCollector,
+			newMasterStateCollector,
 		} {
+			c := f(mkHttpClient(*masterURL, *timeout, auth));
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
@@ -46,10 +60,11 @@ func main() {
 		log.Printf("Exposing master metrics on %s", *addr)
 
 	case *slaveURL != "":
-		for _, c := range []prometheus.Collector{
-			newSlaveCollector(*slaveURL, *timeout),
-			newSlaveMonitorCollector(*slaveURL, *timeout),
+		for _, f := range []func(*httpClient) prometheus.Collector{
+			newSlaveCollector,
+			newSlaveMonitorCollector,
 		} {
+			c := f(mkHttpClient(*slaveURL, *timeout, auth));
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}

@@ -2,12 +2,11 @@ package main
 
 import (
 	"strings"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func newMasterCollector(url string, timeout time.Duration) *metricCollector {
+func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 	metrics := map[prometheus.Collector]func(metricMap, prometheus.Collector) error{
 		// CPU/Disk/Mem resources in free/used
 		gauge("master", "cpus", "Current CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
@@ -277,5 +276,5 @@ func newMasterCollector(url string, timeout time.Duration) *metricCollector {
 			return nil
 		},
 	}
-	return newMetricCollector(url, timeout, metrics)
+	return newMetricCollector(httpClient, metrics)
 }

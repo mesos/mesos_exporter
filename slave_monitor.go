@@ -1,12 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -39,8 +33,7 @@ type (
 	}
 
 	slaveCollector struct {
-		*http.Client
-		url     string
+		*httpClient
 		metrics map[*prometheus.Desc]metric
 	}
 
@@ -50,12 +43,11 @@ type (
 	}
 )
 
-func newSlaveMonitorCollector(url string, timeout time.Duration) *slaveCollector {
+func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 	labels := []string{"id", "framework_id", "source"}
 
 	return &slaveCollector{
-		Client: &http.Client{Timeout: timeout},
-		url:    url,
+		httpClient: httpClient,
 		metrics: map[*prometheus.Desc]metric{
 			// CPU
 			prometheus.NewDesc(
@@ -139,19 +131,8 @@ func newSlaveMonitorCollector(url string, timeout time.Duration) *slaveCollector
 }
 
 func (c *slaveCollector) Collect(ch chan<- prometheus.Metric) {
-	u := strings.TrimSuffix(c.url, "/") + "/monitor/statistics"
-	res, err := c.Get(u)
-	if err != nil {
-		log.Printf("Error fetching %s: %s", u, err)
-		return
-	}
-	defer res.Body.Close()
-
 	stats := []executor{}
-	if err := json.NewDecoder(res.Body).Decode(&stats); err != nil {
-		log.Print("Error decoding response body from %s: %s", err)
-		return
-	}
+	c.fetchAndDecode("/monitor/statistics", &stats)
 
 	for _, exec := range stats {
 		for desc, m := range c.metrics {
