@@ -12,10 +12,16 @@ metrics from an agent.
 
 ```sh
 Usage of mesos-exporter:
-  -addr=":9110": Address to listen on
-  -master="": Expose metrics from master running on this URL
-  -slave="": Expose metrics from agent running on this URL
-  -timeout=5s: Master polling timeout
+  -addr string
+       	Address to listen on (default ":9110")
+  -ignoreCompletedFrameworkTasks
+       	Don't export task_state_time metric
+  -master string
+       	Expose metrics from master running on this URL
+  -slave string
+       	Expose metrics from slave running on this URL
+  -timeout duration
+       	Master polling timeout (default 5s)
 ```
 
 Usually you would run one exporter with `-master` pointing to the current
