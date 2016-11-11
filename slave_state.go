@@ -75,6 +75,9 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 							"executor_id": e.ID,
 						}
 						// User labels
+						for _, label := range normalisedUserTaskLabelList {
+							taskLabels[label] = ""
+						}
 						for _, label := range t.Labels {
 							normalisedLabel := normaliseLabel(label.Key)
 							// Ignore labels not explicitly whitelisted by user
