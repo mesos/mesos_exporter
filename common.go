@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -66,37 +65,56 @@ func counter(subsystem, name, help string, labels ...string) *prometheus.Counter
 	}, labels)
 }
 
+type authInfo struct {
+	username string
+	password string
+}
+
+type httpClient struct {
+	http.Client
+	url  string
+	auth authInfo
+}
+
 type metricCollector struct {
-	*http.Client
-	url     string
+	*httpClient
 	metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error
 }
 
-func newMetricCollector(url string, timeout time.Duration, metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error) *metricCollector {
-	return &metricCollector{
-		url:     url,
-		Client:  &http.Client{Timeout: timeout},
-		metrics: metrics,
-	}
+func newMetricCollector(httpClient *httpClient, metrics map[prometheus.Collector]func(metricMap, prometheus.Collector) error) prometheus.Collector {
+	return &metricCollector{httpClient, metrics}
 }
 
-func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
-	u := strings.TrimSuffix(c.url, "/") + "/metrics/snapshot"
-	res, err := c.Get(u)
+func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}) bool {
+	url := strings.TrimSuffix(httpClient.url, "/") + endpoint
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("Error fetching %s: %s", u, err)
+		log.Printf("Error creating HTTP request to %s: %s", url, err)
+		return false
+	}
+	if (httpClient.auth.username != "" && httpClient.auth.password != "") {
+		req.SetBasicAuth(httpClient.auth.username, httpClient.auth.password)
+	}
+	res, err := httpClient.Do(req)
+	if err != nil {
+		log.Printf("Error fetching %s: %s", url, err)
 		errorCounter.Inc()
-		return
+		return false
 	}
 	defer res.Body.Close()
 
-	var m metricMap
-	if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&target); err != nil {
 		log.Print("Error decoding response body from %s: %s", err)
 		errorCounter.Inc()
-		return
+		return false
 	}
 
+	return true
+}
+
+func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
+	var m metricMap
+	c.fetchAndDecode("/metrics/snapshot", &m)
 	for cm, f := range c.metrics {
 		if err := f(m, cm); err != nil {
 			if err == notFoundInMap {

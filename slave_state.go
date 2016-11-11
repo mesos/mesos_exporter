@@ -5,12 +5,8 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
-	"strings"
-	"time"
 	"regexp"
+	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -26,8 +22,7 @@ type (
 	}
 
 	slaveStateCollector struct {
-		*http.Client
-		url     string
+		*httpClient
 		metrics map[prometheus.Collector]func(*slaveState, prometheus.Collector)
 	}
 )
@@ -52,7 +47,7 @@ func inArray(needle string, haystack []string) bool {
 	return false
 }
 
-func newSlaveStateCollector(url string, timeout time.Duration, userTaskLabelList []string) *slaveStateCollector {
+func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) *slaveStateCollector {
 	defaultLabels := []string{"source", "framework_id", "executor_id"}
 
 	// Sanitise user-supplied list of task labels that should be included in the series
@@ -94,28 +89,12 @@ func newSlaveStateCollector(url string, timeout time.Duration, userTaskLabelList
 		},
 	}
 
-	return &slaveStateCollector{
-		Client:  &http.Client{Timeout: timeout},
-		url:     url,
-		metrics: metrics,
-	}
+	return &slaveStateCollector{httpClient, metrics}
 }
 
 func (c *slaveStateCollector) Collect(ch chan<- prometheus.Metric) {
-	u := strings.TrimSuffix(c.url, "/") + "/slave(1)/state"
-	res, err := c.Get(u)
-	if err != nil {
-		log.Printf("Error fetching %s: %s", u, err)
-		return
-	}
-	defer res.Body.Close()
-
 	var s slaveState
-	if err := json.NewDecoder(res.Body).Decode(&s); err != nil {
-		log.Print("Error decoding response body from %s: %s", err)
-		return
-	}
-
+	c.fetchAndDecode("/slave(1)/state", &s)
 	for c, set := range c.metrics {
 		set(&s, c)
 		c.Collect(ch)
