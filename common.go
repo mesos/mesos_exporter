@@ -16,6 +16,61 @@ var (
 	notFoundInMap = errors.New("Couldn't find key in map")
 )
 
+type settableCounterVec struct {
+	desc   *prometheus.Desc
+	values []prometheus.Metric
+}
+
+func (c *settableCounterVec) Describe(ch chan<- *prometheus.Desc) {
+	ch <- c.desc
+}
+
+func (c *settableCounterVec) Collect(ch chan<- prometheus.Metric) {
+	for _, v := range c.values {
+		ch <- v
+	}
+
+	c.values = nil
+}
+
+func (c *settableCounterVec) Set(value float64, labelValues ...string) {
+	c.values = append(c.values, prometheus.MustNewConstMetric(c.desc, prometheus.CounterValue, value, labelValues...))
+}
+
+type settableCounter struct {
+	desc  *prometheus.Desc
+	value prometheus.Metric
+}
+
+func (c *settableCounter) Describe(ch chan<- *prometheus.Desc) {
+	if c.desc == nil {
+		log.Printf("NIL description: %v", c)
+	}
+	ch <- c.desc
+}
+
+func (c *settableCounter) Collect(ch chan<- prometheus.Metric) {
+	if c.value == nil {
+		log.Printf("NIL value: %v", c)
+	}
+	ch <- c.value
+}
+
+func (c *settableCounter) Set(value float64) {
+	c.value = prometheus.MustNewConstMetric(c.desc, prometheus.CounterValue, value)
+}
+
+func newSettableCounter(subsystem, name, help string) *settableCounter {
+	return &settableCounter{
+		desc: prometheus.NewDesc(
+			prometheus.BuildFQName("mesos", subsystem, name),
+			help,
+			nil,
+			prometheus.Labels{},
+		),
+	}
+}
+
 func gauge(subsystem, name, help string, labels ...string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "mesos",
@@ -25,13 +80,18 @@ func gauge(subsystem, name, help string, labels ...string) *prometheus.GaugeVec 
 	}, labels)
 }
 
-func counter(subsystem, name, help string, labels ...string) *prometheus.CounterVec {
-	return prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "mesos",
-		Subsystem: subsystem,
-		Name:      name,
-		Help:      help,
-	}, labels)
+func counter(subsystem, name, help string, labels ...string) *settableCounterVec {
+	desc := prometheus.NewDesc(
+		prometheus.BuildFQName("mesos", subsystem, name),
+		help,
+		labels,
+		prometheus.Labels{},
+	)
+
+	return &settableCounterVec{
+		desc:   desc,
+		values: nil,
+	}
 }
 
 type authInfo struct {
@@ -61,7 +121,7 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 		log.Printf("Error creating HTTP request to %s: %s", url, err)
 		return false
 	}
-	if (httpClient.auth.username != "" && httpClient.auth.password != "") {
+	if httpClient.auth.username != "" && httpClient.auth.password != "" {
 		req.SetBasicAuth(httpClient.auth.username, httpClient.auth.password)
 	}
 	res, err := httpClient.Do(req)
