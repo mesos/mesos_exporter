@@ -104,7 +104,7 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 	defer res.Body.Close()
 
 	if err := json.NewDecoder(res.Body).Decode(&target); err != nil {
-		log.Print("Error decoding response body from %s: %s", err)
+		log.Printf("Error decoding response body from %s: %s", url, err)
 		errorCounter.Inc()
 		return false
 	}
