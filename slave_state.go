@@ -6,7 +6,6 @@ package main
 
 import (
 	"regexp"
-	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
