@@ -11,6 +11,7 @@ type (
 		FrameworkID string      `json:"framework_id"`
 		Source      string      `json:"source"`
 		Statistics  *statistics `json:"statistics"`
+		Tasks       []task      `json:"tasks"`
 	}
 
 	statistics struct {

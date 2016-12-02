@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -35,6 +36,7 @@ func main() {
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
+	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the task_labels metric")
 	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric");
 
 	fs.Parse(os.Args[1:])
@@ -63,10 +65,22 @@ func main() {
 		log.Printf("Exposing master metrics on %s", *addr)
 
 	case *slaveURL != "":
-		for _, f := range []func(*httpClient) prometheus.Collector{
-			newSlaveCollector,
-			newSlaveMonitorCollector,
-		} {
+		slaveCollectors := []func(*httpClient) prometheus.Collector{
+			func(c *httpClient) prometheus.Collector {
+				return newSlaveCollector(c)
+			},
+			func(c *httpClient) prometheus.Collector {
+				return newSlaveMonitorCollector(c)
+			},
+		}
+		if *exportedTaskLabels != "" {
+			slaveLabels := strings.Split(*exportedTaskLabels, ",");
+			slaveCollectors = append(slaveCollectors, func (c *httpClient) prometheus.Collector{
+				return newSlaveStateCollector(c, slaveLabels)
+			})
+		}
+
+		for _, f := range slaveCollectors {
 			c := f(mkHttpClient(*slaveURL, *timeout, auth));
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)

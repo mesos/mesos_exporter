@@ -10,6 +10,37 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type (
+	resources struct {
+		CPUs  float64 `json:"cpus"`
+		Disk  float64 `json:"disk"`
+		Mem   float64 `json:"mem"`
+		Ports ranges  `json:"ports"`
+	}
+
+	task struct {
+		Name        string    `json:"name"`
+		ID          string    `json:"id"`
+		ExecutorID  string    `json:"executor_id"`
+		FrameworkID string    `json:"framework_id"`
+		SlaveID     string    `json:"slave_id"`
+		State       string    `json:"state"`
+		Labels      []label   `json:"labels"`
+		Resources   resources `json:"resources"`
+		Statuses    []status  `json:"statuses"`
+	}
+
+	label struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
+
+	status struct {
+		State     string  `json:"state"`
+		Timestamp float64 `json:"timestamp"`
+	}
+)
+
 type metricMap map[string]float64
 
 var (
