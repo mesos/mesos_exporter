@@ -122,30 +122,24 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			c.(prometheus.Gauge).Set(active)
 			return nil
 		},
-		prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "mesos",
-			Subsystem: "slave",
-			Name:      "executors_terminated",
-			Help:      "Total number of executor terminations.",
-		}): func(m metricMap, c prometheus.Collector) error {
+		newSettableCounter("slave",
+			"executors_terminated",
+			"Total number of executor terminations."): func(m metricMap, c prometheus.Collector) error {
 			terminated, ok := m["slave/executors_terminated"]
 			if !ok {
 				return notFoundInMap
 			}
-			c.(prometheus.Counter).Set(terminated)
+			c.(*settableCounter).Set(terminated)
 			return nil
 		},
-		prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "mesos",
-			Subsystem: "slave",
-			Name:      "executors_preempted",
-			Help:      "Total number of executor preemptions.",
-		}): func(m metricMap, c prometheus.Collector) error {
+		newSettableCounter("slave",
+			"executors_preempted",
+			"Total number of executor preemptions."): func(m metricMap, c prometheus.Collector) error {
 			preempted, ok := m["slave/executors_preempted"]
 			if !ok {
 				return notFoundInMap
 			}
-			c.(prometheus.Counter).Set(preempted)
+			c.(*settableCounter).Set(preempted)
 			return nil
 		},
 
@@ -159,11 +153,11 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return notFoundInMap
 			}
-			c.(*prometheus.CounterVec).WithLabelValues("errored").Set(errored)
-			c.(*prometheus.CounterVec).WithLabelValues("failed").Set(failed)
-			c.(*prometheus.CounterVec).WithLabelValues("finished").Set(finished)
-			c.(*prometheus.CounterVec).WithLabelValues("killed").Set(killed)
-			c.(*prometheus.CounterVec).WithLabelValues("lost").Set(lost)
+			c.(*settableCounterVec).Set(errored, "errored")
+			c.(*settableCounterVec).Set(failed, "failed")
+			c.(*settableCounterVec).Set(finished, "finished")
+			c.(*settableCounterVec).Set(killed, "killed")
+			c.(*settableCounterVec).Set(lost, "lost")
 			return nil
 		},
 		counter("slave", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
@@ -173,9 +167,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return notFoundInMap
 			}
-			c.(*prometheus.CounterVec).WithLabelValues("running").Set(running)
-			c.(*prometheus.CounterVec).WithLabelValues("staging").Set(staging)
-			c.(*prometheus.CounterVec).WithLabelValues("starting").Set(starting)
+			c.(*settableCounterVec).Set(running, "running")
+			c.(*settableCounterVec).Set(staging, "staging")
+			c.(*settableCounterVec).Set(starting, "starting")
 			return nil
 		},
 
@@ -192,10 +186,10 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return notFoundInMap
 			}
-			c.(*prometheus.CounterVec).WithLabelValues("framework", "valid").Set(frameworkMessagesValid)
-			c.(*prometheus.CounterVec).WithLabelValues("framework", "invalid").Set(frameworkMessagesInvalid)
-			c.(*prometheus.CounterVec).WithLabelValues("status", "valid").Set(statusUpdateValid)
-			c.(*prometheus.CounterVec).WithLabelValues("status", "invalid").Set(statusUpdateInvalid)
+			c.(*settableCounterVec).Set(frameworkMessagesValid, "framework", "valid")
+			c.(*settableCounterVec).Set(frameworkMessagesInvalid, "framework", "invalid")
+			c.(*settableCounterVec).Set(statusUpdateValid, "status", "valid")
+			c.(*settableCounterVec).Set(statusUpdateInvalid, "status", "invalid")
 
 			return nil
 		},
