@@ -3,7 +3,7 @@ Exporter for Mesos master and agent metrics
 
 ## Installing
 ```sh
-$ go get github.com/mesosphere/mesos-exporter
+$ go get github.com/mesosphere/mesos_exporter
 ```
 
 ## Using
@@ -11,7 +11,7 @@ The Mesos Exporter can either expose cluster wide metrics from a master or task
 metrics from an agent.
 
 ```sh
-Usage of mesos-exporter:
+Usage of mesos_exporter:
   -addr string
        	Address to listen on (default ":9110")
   -ignoreCompletedFrameworkTasks
@@ -29,5 +29,5 @@ leader and one exporter for each slave with `-slave` pointing to it. In
 a default Mesos / DC/OS setup, you should be able to run the mesos-exporter
 like this:
 
-- Master: `mesos-exporter -master http://leader.mesos:5050`
-- Agent: `mesos-exporter -slave http://localhost:5051`
+- Master: `mesos_exporter -master http://leader.mesos:5050`
+- Agent: `mesos_exporter -slave http://localhost:5051`
