@@ -28,12 +28,13 @@ type (
 
 // Task labels must be alphanumeric, no leading digits.
 var invalidLabelNameCharRE = regexp.MustCompile("[^a-zA-Z_0-9]")
+
 // Replace invalid task label digits by underscores
 func normaliseLabel(label string) string {
 	if len(label) > 0 && '0' <= label[0] && label[0] <= '9' {
-		return "_" + invalidLabelNameCharRE.ReplaceAllString(label[1:], "_");
+		return "_" + invalidLabelNameCharRE.ReplaceAllString(label[1:], "_")
 	}
-	return invalidLabelNameCharRE.ReplaceAllString(label, "_");
+	return invalidLabelNameCharRE.ReplaceAllString(label, "_")
 }
 
 // Return true if `needle` is in `haystack`
@@ -69,9 +70,9 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 					for _, t := range e.Tasks {
 						// Default labels
 						taskLabels := map[string]string{
-							"source": e.Source,
+							"source":       e.Source,
 							"framework_id": f.ID,
-							"executor_id": e.ID,
+							"executor_id":  e.ID,
 						}
 						// User labels
 						for _, label := range normalisedUserTaskLabelList {
@@ -80,7 +81,7 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 						for _, label := range t.Labels {
 							normalisedLabel := normaliseLabel(label.Key)
 							// Ignore labels not explicitly whitelisted by user
-							if (inArray(normalisedLabel, normalisedUserTaskLabelList)) {
+							if inArray(normalisedLabel, normalisedUserTaskLabelList) {
 								taskLabels[normalisedLabel] = label.Value
 							}
 						}
