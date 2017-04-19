@@ -13,16 +13,26 @@ metrics from an agent.
 ```sh
 Usage of mesos-exporter:
   -addr string
-       	Address to listen on (default ":9110")
+        Address to listen on (default ":9110")
+  -exportedTaskLabels string
+        Comma-separated list of task labels to include in the task_labels metric
   -ignoreCompletedFrameworkTasks
-       	Don't export task_state_time metric
+        Don't export task_state_time metric
   -master string
-       	Expose metrics from master running on this URL
+        Expose metrics from master running on this URL
   -slave string
-       	Expose metrics from slave running on this URL
+        Expose metrics from slave running on this URL
   -timeout duration
-       	Master polling timeout (default 5s)
+        Master polling timeout (default 5s)
+  -trustedCerts string
+        Comma-separated list of certificates (.pem files) trusted for requests to
+        Mesos endpoints
 ```
+When using HTTP authentication, the following values are read from the environment:
+- `MESOS_EXPORTER_USERNAME`
+- `MESOS_EXPORTER_PASSWORD`
+
+---
 
 Usually you would run one exporter with `-master` pointing to the current
 leader and one exporter for each slave with `-slave` pointing to it. In

@@ -44,8 +44,20 @@ func mkHttpClient(url string, timeout time.Duration, auth authInfo, certPool *x5
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{RootCAs: certPool},
 	}
+
+	// HTTP Redirects are authenticated by Go (>=1.8), when redirecting to an identical domain or a subdomain.
+	// -> Hijack redirect authentication, since hostnames rarely follow this logic.
+	var redirectFunc func(req *http.Request, via []*http.Request) error
+	if auth.username != "" && auth.password != "" {
+		// Auth information is only available in the current context -> use lambda function
+		redirectFunc = func(req *http.Request, via []*http.Request) error{
+				req.SetBasicAuth(auth.username, auth.password)
+			return nil
+		}
+	}
+
 	return &httpClient{
-		http.Client{Timeout: timeout, Transport: transport},
+		http.Client{Timeout: timeout, Transport: transport, CheckRedirect: redirectFunc},
 		url,
 		auth,
 	}
