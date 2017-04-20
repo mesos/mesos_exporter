@@ -161,7 +161,7 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool) 
 		},
 	}
 
-	if (!ignoreFrameworkTasks) {
+	if !ignoreFrameworkTasks {
 		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Help:      "Completed framework tasks",
 			Namespace: "mesos",
@@ -191,7 +191,7 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool) 
 
 	return &masterCollector{
 		httpClient: httpClient,
-		metrics: metrics,
+		metrics:    metrics,
 	}
 }
 

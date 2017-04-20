@@ -1,15 +1,15 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"net/http"
 	"crypto/tls"
 	"crypto/x509"
-	"os"
+	"flag"
 	"io/ioutil"
-	"time"
+	"log"
+	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -44,8 +44,20 @@ func mkHttpClient(url string, timeout time.Duration, auth authInfo, certPool *x5
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{RootCAs: certPool},
 	}
+
+	// HTTP Redirects are authenticated by Go (>=1.8), when redirecting to an identical domain or a subdomain.
+	// -> Hijack redirect authentication, since hostnames rarely follow this logic.
+	var redirectFunc func(req *http.Request, via []*http.Request) error
+	if auth.username != "" && auth.password != "" {
+		// Auth information is only available in the current context -> use lambda function
+		redirectFunc = func(req *http.Request, via []*http.Request) error {
+			req.SetBasicAuth(auth.username, auth.password)
+			return nil
+		}
+	}
+
 	return &httpClient{
-		http.Client{Timeout: timeout, Transport: transport},
+		http.Client{Timeout: timeout, Transport: transport, CheckRedirect: redirectFunc},
 		url,
 		auth,
 	}
@@ -58,7 +70,7 @@ func main() {
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the task_labels metric")
-	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric");
+	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric")
 	trustedCerts := fs.String("trustedCerts", "", "Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints")
 
 	fs.Parse(os.Args[1:])
@@ -84,7 +96,7 @@ func main() {
 				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks)
 			},
 		} {
-			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool));
+			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool))
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
@@ -101,14 +113,14 @@ func main() {
 			},
 		}
 		if *exportedTaskLabels != "" {
-			slaveLabels := strings.Split(*exportedTaskLabels, ",");
-			slaveCollectors = append(slaveCollectors, func (c *httpClient) prometheus.Collector{
+			slaveLabels := strings.Split(*exportedTaskLabels, ",")
+			slaveCollectors = append(slaveCollectors, func(c *httpClient) prometheus.Collector {
 				return newSlaveStateCollector(c, slaveLabels)
 			})
 		}
 
 		for _, f := range slaveCollectors {
-			c := f(mkHttpClient(*slaveURL, *timeout, auth, certPool));
+			c := f(mkHttpClient(*slaveURL, *timeout, auth, certPool))
 			if err := prometheus.Register(c); err != nil {
 				log.Fatal(err)
 			}
