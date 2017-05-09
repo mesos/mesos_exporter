@@ -5,8 +5,6 @@
 package main
 
 import (
-	"regexp"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -26,36 +24,10 @@ type (
 	}
 )
 
-// Task labels must be alphanumeric, no leading digits.
-var invalidLabelNameCharRE = regexp.MustCompile("[^a-zA-Z_0-9]")
-
-// Replace invalid task label digits by underscores
-func normaliseLabel(label string) string {
-	if len(label) > 0 && '0' <= label[0] && label[0] <= '9' {
-		return "_" + invalidLabelNameCharRE.ReplaceAllString(label[1:], "_")
-	}
-	return invalidLabelNameCharRE.ReplaceAllString(label, "_")
-}
-
-// Return true if `needle` is in `haystack`
-func inArray(needle string, haystack []string) bool {
-	for _, elem := range haystack {
-		if needle == elem {
-			return true
-		}
-	}
-	return false
-}
-
 func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) *slaveStateCollector {
 	defaultLabels := []string{"source", "framework_id", "executor_id"}
 
-	// Sanitise user-supplied list of task labels that should be included in the series
-	normalisedUserTaskLabelList := []string{}
-	for _, label := range userTaskLabelList {
-		normalisedUserTaskLabelList = append(normalisedUserTaskLabelList, normaliseLabel(label))
-	}
-
+	normalisedUserTaskLabelList := normaliseLabelList(userTaskLabelList)
 	taskLabelList := append(defaultLabels, normalisedUserTaskLabelList...)
 
 	metrics := map[prometheus.Collector]func(*slaveState, prometheus.Collector){
@@ -81,7 +53,7 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 						for _, label := range t.Labels {
 							normalisedLabel := normaliseLabel(label.Key)
 							// Ignore labels not explicitly whitelisted by user
-							if inArray(normalisedLabel, normalisedUserTaskLabelList) {
+							if stringinSlice(normalisedLabel, normalisedUserTaskLabelList) {
 								taskLabels[normalisedLabel] = label.Value
 							}
 						}
