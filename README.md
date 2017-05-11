@@ -14,8 +14,10 @@ metrics from an agent.
 Usage of mesos-exporter:
   -addr string
         Address to listen on (default ":9110")
+  -exportedSlaveAttributes string
+        Comma-separated list of slave attributes to include in the corresponding metric
   -exportedTaskLabels string
-        Comma-separated list of task labels to include in the task_labels metric
+        Comma-separated list of task labels to include in the corresponding metric
   -ignoreCompletedFrameworkTasks
         Don't export task_state_time metric
   -master string

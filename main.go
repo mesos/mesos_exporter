@@ -99,12 +99,15 @@ func main() {
 		certPool = getX509CertPool(csvInputToList(*trustedCerts))
 	}
 
+	slaveAttributeLabels := csvInputToList(*exportedSlaveAttributes)
+	slaveTaskLabels := csvInputToList(*exportedTaskLabels)
+
 	switch {
 	case *masterURL != "":
 		for _, f := range []func(*httpClient) prometheus.Collector{
 			newMasterCollector,
 			func(c *httpClient) prometheus.Collector {
-				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks)
+				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks, slaveAttributeLabels)
 			},
 		} {
 			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool))
@@ -123,10 +126,10 @@ func main() {
 				return newSlaveMonitorCollector(c)
 			},
 		}
-		slaveLabels := csvInputToList(*exportedTaskLabels)
-		if len(slaveLabels) > 0 {
+
+		if len(slaveTaskLabels) > 0 || len(slaveAttributeLabels) > 0 {
 			slaveCollectors = append(slaveCollectors, func(c *httpClient) prometheus.Collector {
-				return newSlaveStateCollector(c, slaveLabels)
+				return newSlaveStateCollector(c, slaveTaskLabels, slaveAttributeLabels)
 			})
 		}
 
