@@ -213,7 +213,7 @@ func normaliseLabelList(labelList []string) []string {
 	return normalisedLabelList
 }
 
-func stringinSlice(string string, slice []string) bool {
+func stringInSlice(string string, slice []string) bool {
 	for _, elem := range slice {
 		if string == elem {
 			return true

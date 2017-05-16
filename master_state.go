@@ -183,7 +183,7 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool, 
 				}
 				for key, value := range s.Attributes {
 					normalisedLabel := normaliseLabel(key)
-					if stringinSlice(normalisedLabel, normalisedAttributeLabels) {
+					if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
 						slaveAttributesExport[normalisedLabel] = value
 					}
 				}
