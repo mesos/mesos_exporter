@@ -63,13 +63,24 @@ func mkHttpClient(url string, timeout time.Duration, auth authInfo, certPool *x5
 	}
 }
 
+func csvInputToList(input string) []string {
+	var entryList []string
+	if input == "" {
+		return entryList
+	}
+	sanitizedString := strings.Replace(input, " ", "", -1)
+	entryList = strings.Split(sanitizedString, ",")
+	return entryList
+}
+
 func main() {
 	fs := flag.NewFlagSet("mesos-exporter", flag.ExitOnError)
 	addr := fs.String("addr", ":9110", "Address to listen on")
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
-	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the task_labels metric")
+	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the corresponding metric")
+	exportedSlaveAttributes := fs.String("exportedSlaveAttributes", "", "Comma-separated list of slave attributes to include in the corresponding metric")
 	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric")
 	trustedCerts := fs.String("trustedCerts", "", "Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints")
 
@@ -85,15 +96,18 @@ func main() {
 
 	var certPool *x509.CertPool = nil
 	if *trustedCerts != "" {
-		certPool = getX509CertPool(strings.Split(*trustedCerts, ","))
+		certPool = getX509CertPool(csvInputToList(*trustedCerts))
 	}
+
+	slaveAttributeLabels := csvInputToList(*exportedSlaveAttributes)
+	slaveTaskLabels := csvInputToList(*exportedTaskLabels)
 
 	switch {
 	case *masterURL != "":
 		for _, f := range []func(*httpClient) prometheus.Collector{
 			newMasterCollector,
 			func(c *httpClient) prometheus.Collector {
-				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks)
+				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks, slaveAttributeLabels)
 			},
 		} {
 			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool))
@@ -112,10 +126,10 @@ func main() {
 				return newSlaveMonitorCollector(c)
 			},
 		}
-		if *exportedTaskLabels != "" {
-			slaveLabels := strings.Split(*exportedTaskLabels, ",")
+
+		if len(slaveTaskLabels) > 0 || len(slaveAttributeLabels) > 0 {
 			slaveCollectors = append(slaveCollectors, func(c *httpClient) prometheus.Collector {
-				return newSlaveStateCollector(c, slaveLabels)
+				return newSlaveStateCollector(c, slaveTaskLabels, slaveAttributeLabels)
 			})
 		}
 

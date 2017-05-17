@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -192,7 +193,31 @@ func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *metricCollector) Describe(ch chan<- *prometheus.Desc) {
-	for m, _ := range c.metrics {
+	for m := range c.metrics {
 		m.Describe(ch)
 	}
+}
+
+var invalidLabelNameCharRE = regexp.MustCompile("(^[^a-zA-Z_])|([^a-zA-Z0-9_])")
+
+// Sanitize label names according to https://prometheus.io/docs/concepts/data_model/
+func normaliseLabel(label string) string {
+	return invalidLabelNameCharRE.ReplaceAllString(label, "_")
+}
+
+func normaliseLabelList(labelList []string) []string {
+	normalisedLabelList := []string{}
+	for _, label := range labelList {
+		normalisedLabelList = append(normalisedLabelList, normaliseLabel(label))
+	}
+	return normalisedLabelList
+}
+
+func stringInSlice(string string, slice []string) bool {
+	for _, elem := range slice {
+		if string == elem {
+			return true
+		}
+	}
+	return false
 }

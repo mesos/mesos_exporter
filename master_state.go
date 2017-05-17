@@ -10,10 +10,11 @@ import (
 
 type (
 	slave struct {
-		PID        string    `json:"pid"`
-		Used       resources `json:"used_resources"`
-		Unreserved resources `json:"unreserved_resources"`
-		Total      resources `json:"resources"`
+		PID        string            `json:"pid"`
+		Used       resources         `json:"used_resources"`
+		Unreserved resources         `json:"unreserved_resources"`
+		Total      resources         `json:"resources"`
+		Attributes map[string]string `json:"attributes"`
 	}
 
 	framework struct {
@@ -33,7 +34,7 @@ type (
 	}
 )
 
-func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool) prometheus.Collector {
+func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool, slaveAttributeLabels []string) prometheus.Collector {
 	labels := []string{"slave"}
 	metrics := map[prometheus.Collector]func(*state, prometheus.Collector){
 		prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -159,6 +160,36 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool) 
 				c.(*prometheus.GaugeVec).WithLabelValues(s.PID).Set(float64(size))
 			}
 		},
+	}
+
+	if len(slaveAttributeLabels) > 0 {
+		normalisedAttributeLabels := normaliseLabelList(slaveAttributeLabels)
+		slaveAttributesLabelsExport := append(labels, normalisedAttributeLabels...)
+
+		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Help:      "Slave attributes",
+			Namespace: "mesos",
+			Subsystem: "slave",
+			Name:      "attributes",
+		}, slaveAttributesLabelsExport)] = func(st *state, c prometheus.Collector) {
+			for _, s := range st.Slaves {
+				slaveAttributesExport := map[string]string{
+					"slave": s.PID,
+				}
+
+				// (Empty) user labels
+				for _, label := range normalisedAttributeLabels {
+					slaveAttributesExport[label] = ""
+				}
+				for key, value := range s.Attributes {
+					normalisedLabel := normaliseLabel(key)
+					if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
+						slaveAttributesExport[normalisedLabel] = value
+					}
+				}
+				c.(*prometheus.GaugeVec).With(slaveAttributesExport).Set(1)
+			}
+		}
 	}
 
 	if !ignoreFrameworkTasks {

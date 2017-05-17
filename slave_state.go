@@ -2,11 +2,10 @@
 // on executors. Information scraped at this point:
 //
 // * Labels of running tasks ("mesos_slave_task_labels" series)
+// * Attributes of mesos slaves ("mesos_slave_attributes")
 package main
 
 import (
-	"regexp"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -16,8 +15,10 @@ type (
 		Executors []executor `json:"executors"`
 	}
 
+	// similar to /master/state's 'slave', but with small differences
 	slaveState struct {
-		Frameworks []slaveFramework `json:"frameworks"`
+		Attributes map[string]string `json:"attributes"`
+		Frameworks []slaveFramework  `json:"frameworks"`
 	}
 
 	slaveStateCollector struct {
@@ -26,45 +27,20 @@ type (
 	}
 )
 
-// Task labels must be alphanumeric, no leading digits.
-var invalidLabelNameCharRE = regexp.MustCompile("[^a-zA-Z_0-9]")
+func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string, slaveAttributeLabelList []string) *slaveStateCollector {
+	var metrics = map[prometheus.Collector]func(*slaveState, prometheus.Collector){}
 
-// Replace invalid task label digits by underscores
-func normaliseLabel(label string) string {
-	if len(label) > 0 && '0' <= label[0] && label[0] <= '9' {
-		return "_" + invalidLabelNameCharRE.ReplaceAllString(label[1:], "_")
-	}
-	return invalidLabelNameCharRE.ReplaceAllString(label, "_")
-}
+	if len(userTaskLabelList) > 0 {
+		defaultTaskLabels := []string{"source", "framework_id", "executor_id"}
+		normalisedUserTaskLabelList := normaliseLabelList(userTaskLabelList)
+		taskLabelList := append(defaultTaskLabels, normalisedUserTaskLabelList...)
 
-// Return true if `needle` is in `haystack`
-func inArray(needle string, haystack []string) bool {
-	for _, elem := range haystack {
-		if needle == elem {
-			return true
-		}
-	}
-	return false
-}
-
-func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) *slaveStateCollector {
-	defaultLabels := []string{"source", "framework_id", "executor_id"}
-
-	// Sanitise user-supplied list of task labels that should be included in the series
-	normalisedUserTaskLabelList := []string{}
-	for _, label := range userTaskLabelList {
-		normalisedUserTaskLabelList = append(normalisedUserTaskLabelList, normaliseLabel(label))
-	}
-
-	taskLabelList := append(defaultLabels, normalisedUserTaskLabelList...)
-
-	metrics := map[prometheus.Collector]func(*slaveState, prometheus.Collector){
-		prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Help:      "Task labels",
 			Namespace: "mesos",
 			Subsystem: "slave",
 			Name:      "task_labels",
-		}, taskLabelList): func(st *slaveState, c prometheus.Collector) {
+		}, taskLabelList)] = func(st *slaveState, c prometheus.Collector) {
 			for _, f := range st.Frameworks {
 				for _, e := range f.Executors {
 					for _, t := range e.Tasks {
@@ -81,7 +57,7 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 						for _, label := range t.Labels {
 							normalisedLabel := normaliseLabel(label.Key)
 							// Ignore labels not explicitly whitelisted by user
-							if inArray(normalisedLabel, normalisedUserTaskLabelList) {
+							if stringInSlice(normalisedLabel, normalisedUserTaskLabelList) {
 								taskLabels[normalisedLabel] = label.Value
 							}
 						}
@@ -89,7 +65,31 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string) 
 					}
 				}
 			}
-		},
+		}
+	}
+
+	if len(slaveAttributeLabelList) > 0 {
+		normalisedAttributeLabels := normaliseLabelList(slaveAttributeLabelList)
+		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Help:      "Slave attributes",
+			Namespace: "mesos",
+			Subsystem: "slave",
+			Name:      "attributes",
+		}, normalisedAttributeLabels)] = func(st *slaveState, c prometheus.Collector) {
+			slaveAttributesExport := map[string]string{}
+
+			// (Empty) user labels
+			for _, label := range normalisedAttributeLabels {
+				slaveAttributesExport[label] = ""
+			}
+			for key, value := range st.Attributes {
+				normalisedLabel := normaliseLabel(key)
+				if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
+					slaveAttributesExport[normalisedLabel] = value
+				}
+			}
+			c.(*prometheus.GaugeVec).With(slaveAttributesExport).Set(1)
+		}
 	}
 
 	return &slaveStateCollector{httpClient, metrics}
