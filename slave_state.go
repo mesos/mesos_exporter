@@ -10,102 +10,122 @@ import (
 )
 
 type (
-	slaveFramework struct {
-		ID        string     `json:"ID"`
-		Executors []executor `json:"executors"`
-	}
-
-	// similar to /master/state's 'slave', but with small differences
 	slaveState struct {
 		Attributes map[string]string `json:"attributes"`
 		Frameworks []slaveFramework  `json:"frameworks"`
 	}
+	slaveFramework struct {
+		ID        string               `json:"ID"`
+		Executors []slaveStateExecutor `json:"executors"`
+	}
+	slaveStateExecutor struct {
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Source string `json:"source"`
+		Tasks  []task `json:"tasks"`
+	}
 
 	slaveStateCollector struct {
 		*httpClient
-		metrics map[prometheus.Collector]func(*slaveState, prometheus.Collector)
+		metrics map[*prometheus.Desc]slaveMetric
+	}
+	slaveMetric struct {
+		valueType prometheus.ValueType
+		value     func(*slaveState) []metricValue
+	}
+	metricValue struct {
+		result float64
+		labels []string
 	}
 )
 
 func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string, slaveAttributeLabelList []string) *slaveStateCollector {
-	var metrics = map[prometheus.Collector]func(*slaveState, prometheus.Collector){}
+	c := slaveStateCollector{httpClient, make(map[*prometheus.Desc]slaveMetric)}
 
 	if len(userTaskLabelList) > 0 {
-		defaultTaskLabels := []string{"source", "framework_id", "executor_id"}
+		defaultTaskLabels := []string{"source", "framework_id", "executor_id", "task_id"}
 		normalisedUserTaskLabelList := normaliseLabelList(userTaskLabelList)
 		taskLabelList := append(defaultTaskLabels, normalisedUserTaskLabelList...)
 
-		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Help:      "Task labels",
-			Namespace: "mesos",
-			Subsystem: "slave",
-			Name:      "task_labels",
-		}, taskLabelList)] = func(st *slaveState, c prometheus.Collector) {
-			for _, f := range st.Frameworks {
-				for _, e := range f.Executors {
-					for _, t := range e.Tasks {
-						// Default labels
-						taskLabels := map[string]string{
-							"source":       e.Source,
-							"framework_id": f.ID,
-							"executor_id":  e.ID,
-						}
-						// User labels
-						for _, label := range normalisedUserTaskLabelList {
-							taskLabels[label] = ""
-						}
-						for _, label := range t.Labels {
-							normalisedLabel := normaliseLabel(label.Key)
-							// Ignore labels not explicitly whitelisted by user
-							if stringInSlice(normalisedLabel, normalisedUserTaskLabelList) {
-								taskLabels[normalisedLabel] = label.Value
+		c.metrics[prometheus.NewDesc(
+			prometheus.BuildFQName("mesos", "slave", "task_labels"),
+			"Labels assigned to tasks running on slaves",
+			taskLabelList,
+			nil)] = slaveMetric{prometheus.CounterValue,
+			func(st *slaveState) []metricValue {
+				res := []metricValue{}
+				for _, f := range st.Frameworks {
+					for _, e := range f.Executors {
+						for _, t := range e.Tasks {
+							//Default labels
+							taskLabels := prometheus.Labels{
+								"source":       e.Source,
+								"framework_id": f.ID,
+								"executor_id":  e.ID,
+								"task_id":      t.ID,
 							}
+
+							// User labels
+							for _, label := range normalisedUserTaskLabelList {
+								taskLabels[label] = ""
+							}
+							for _, label := range t.Labels {
+								normalisedLabel := normaliseLabel(label.Key)
+								// Ignore labels not explicitly whitelisted by user
+								if stringInSlice(normalisedLabel, normalisedUserTaskLabelList) {
+									taskLabels[normalisedLabel] = label.Value
+								}
+							}
+
+							res = append(res, metricValue{1, getLabelValuesFromMap(taskLabels, taskLabelList)})
 						}
-						c.(*prometheus.GaugeVec).With(taskLabels).Set(1)
 					}
 				}
-			}
+				return res
+			},
 		}
 	}
 
 	if len(slaveAttributeLabelList) > 0 {
 		normalisedAttributeLabels := normaliseLabelList(slaveAttributeLabelList)
-		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Help:      "Slave attributes",
-			Namespace: "mesos",
-			Subsystem: "slave",
-			Name:      "attributes",
-		}, normalisedAttributeLabels)] = func(st *slaveState, c prometheus.Collector) {
-			slaveAttributesExport := map[string]string{}
 
-			// (Empty) user labels
-			for _, label := range normalisedAttributeLabels {
-				slaveAttributesExport[label] = ""
-			}
-			for key, value := range st.Attributes {
-				normalisedLabel := normaliseLabel(key)
-				if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
-					slaveAttributesExport[normalisedLabel] = value
+		c.metrics[prometheus.NewDesc(
+			prometheus.BuildFQName("mesos", "slave", "attributes"),
+			"Attributes assigned to slaves",
+			normalisedAttributeLabels,
+			nil)] = slaveMetric{prometheus.CounterValue,
+			func(st *slaveState) []metricValue {
+				slaveAttributes := prometheus.Labels{}
+
+				for _, label := range normalisedAttributeLabels {
+					slaveAttributes[label] = ""
 				}
-			}
-			c.(*prometheus.GaugeVec).With(slaveAttributesExport).Set(1)
+				for key, value := range st.Attributes {
+					normalisedLabel := normaliseLabel(key)
+					if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
+						slaveAttributes[normalisedLabel] = value
+					}
+				}
+
+				return []metricValue{{1, getLabelValuesFromMap(slaveAttributes, normalisedAttributeLabels)}}
+			},
 		}
 	}
-
-	return &slaveStateCollector{httpClient, metrics}
+	return &c
 }
 
 func (c *slaveStateCollector) Collect(ch chan<- prometheus.Metric) {
 	var s slaveState
 	c.fetchAndDecode("/slave(1)/state", &s)
-	for c, set := range c.metrics {
-		set(&s, c)
-		c.Collect(ch)
+	for d, cm := range c.metrics {
+		for _, m := range cm.value(&s) {
+			ch <- prometheus.MustNewConstMetric(d, cm.valueType, m.result, m.labels...)
+		}
 	}
 }
 
 func (c *slaveStateCollector) Describe(ch chan<- *prometheus.Desc) {
-	for metric := range c.metrics {
-		metric.Describe(ch)
+	for d := range c.metrics {
+		ch <- d
 	}
 }
