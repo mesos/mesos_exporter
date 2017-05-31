@@ -166,18 +166,13 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool, 
 		normalisedAttributeLabels := normaliseLabelList(slaveAttributeLabels)
 		slaveAttributesLabelsExport := append(labels, normalisedAttributeLabels...)
 
-		metrics[prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Help:      "Slave attributes",
-			Namespace: "mesos",
-			Subsystem: "slave",
-			Name:      "attributes",
-		}, slaveAttributesLabelsExport)] = func(st *state, c prometheus.Collector) {
+		metrics[counter("slave", "attributes", "Attributes assigned to slaves", slaveAttributesLabelsExport...)] = func(st *state, c prometheus.Collector) {
 			for _, s := range st.Slaves {
-				slaveAttributesExport := map[string]string{
+				slaveAttributesExport := prometheus.Labels{
 					"slave": s.PID,
 				}
 
-				// (Empty) user labels
+				// User labels
 				for _, label := range normalisedAttributeLabels {
 					slaveAttributesExport[label] = ""
 				}
@@ -187,8 +182,8 @@ func newMasterStateCollector(httpClient *httpClient, ignoreFrameworkTasks bool, 
 						slaveAttributesExport[normalisedLabel] = value
 					}
 				}
-				c.(*prometheus.GaugeVec).With(slaveAttributesExport).Set(1)
-			}
+				c.(*settableCounterVec).Set(1, getLabelValuesFromMap(slaveAttributesExport, slaveAttributesLabelsExport)...)
+				}
 		}
 	}
 

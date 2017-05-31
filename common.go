@@ -221,3 +221,11 @@ func stringInSlice(string string, slice []string) bool {
 	}
 	return false
 }
+
+func getLabelValuesFromMap(labels prometheus.Labels, orderedLabelKeys []string) []string {
+	labelValues := []string{}
+	for _, label := range orderedLabelKeys {
+		labelValues = append(labelValues, labels[label])
+	}
+	return labelValues
+}
