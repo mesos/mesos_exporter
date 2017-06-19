@@ -30,7 +30,7 @@ Usage of mesos-exporter:
         Username to use for HTTP or strict mode authentication
   -password string
         Password to use for HTTP or strict mode authentication
-  -loginUrl
+  -loginURL
         URL for strict mode authentication (default https://leader.mesos/acs/api/v1/auth/login).
   -trustedCerts string
         Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints
