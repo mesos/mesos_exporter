@@ -11,7 +11,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/cpus_total"]
 			used, ok := m["slave/cpus_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -21,7 +21,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/cpus_revocable_total"]
 			used, ok := m["slave/cpus_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -31,7 +31,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/mem_total"]
 			used, ok := m["slave/mem_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -41,7 +41,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/mem_revocable_total"]
 			used, ok := m["slave/mem_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -51,7 +51,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/disk_total"]
 			used, ok := m["slave/disk_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -61,7 +61,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["slave/disk_revocable_total"]
 			used, ok := m["slave/disk_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -77,7 +77,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			registered, ok := m["slave/registered"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(registered)
 			return nil
@@ -90,7 +90,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			uptime, ok := m["slave/uptime_secs"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(uptime)
 			return nil
@@ -102,7 +102,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			running, ok := m["slave/executors_running"]
 			terminating, ok := m["slave/executors_terminating"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("registering").Set(registering)
 			c.(*prometheus.GaugeVec).WithLabelValues("running").Set(running)
@@ -117,7 +117,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["slave/frameworks_active"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(active)
 			return nil
@@ -127,7 +127,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of executor terminations."): func(m metricMap, c prometheus.Collector) error {
 			terminated, ok := m["slave/executors_terminated"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounter).Set(terminated)
 			return nil
@@ -137,7 +137,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of executor preemptions."): func(m metricMap, c prometheus.Collector) error {
 			preempted, ok := m["slave/executors_preempted"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounter).Set(preempted)
 			return nil
@@ -151,7 +151,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			killed, ok := m["slave/tasks_killed"]
 			lost, ok := m["slave/tasks_lost"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(errored, "errored")
 			c.(*settableCounterVec).Set(failed, "failed")
@@ -165,7 +165,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			staging, ok := m["slave/tasks_staging"]
 			starting, ok := m["slave/tasks_starting"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(running, "running")
 			c.(*settableCounterVec).Set(staging, "staging")
@@ -184,7 +184,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			statusUpdateInvalid, ok := m["slave/invalid_status_updates"]
 
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(frameworkMessagesValid, "framework", "valid")
 			c.(*settableCounterVec).Set(frameworkMessagesInvalid, "framework", "invalid")

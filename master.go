@@ -13,7 +13,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/cpus_total"]
 			used, ok := m["master/cpus_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -23,7 +23,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/cpus_revocable_total"]
 			used, ok := m["master/cpus_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -33,7 +33,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/mem_total"]
 			used, ok := m["master/mem_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -43,7 +43,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/mem_revocable_total"]
 			used, ok := m["master/mem_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -53,7 +53,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/disk_total"]
 			used, ok := m["master/disk_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -63,7 +63,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			total, ok := m["master/disk_revocable_total"]
 			used, ok := m["master/disk_revocable_used"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
@@ -79,7 +79,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			elected, ok := m["master/elected"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(elected)
 			return nil
@@ -92,7 +92,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			uptime, ok := m["master/uptime_secs"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(uptime)
 			return nil
@@ -102,7 +102,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			registrations, ok := m["master/slave_registrations"]
 			reregistrations, ok := m["master/slave_reregistrations"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(registrations, "register")
 			c.(*settableCounterVec).Set(reregistrations, "reregister")
@@ -115,7 +115,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			completed, ok := m["master/slave_shutdowns_completed"]
 			removals, ok := m["master/slave_removals"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 
 			c.(*settableCounterVec).Set(scheduled, "scheduled")
@@ -130,7 +130,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			disconnected, ok := m["master/slaves_disconnected"]
 
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			// FIXME: Make sure those assumptions are right
 			// Every "active" node is connected to the master
@@ -150,7 +150,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			disconnected, ok := m["master/frameworks_disconnected"]
 
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			// FIXME: Make sure those assumptions are right
 			// Every "active" framework is connected to the master
@@ -170,7 +170,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			offers, ok := m["master/outstanding_offers"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(prometheus.Gauge).Set(offers)
 			// c.(*prometheus.Gauge).Set(offers)
@@ -184,7 +184,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			killed, ok := m["master/tasks_killed"]
 			lost, ok := m["master/tasks_lost"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(errored, "errored")
 			c.(*settableCounterVec).Set(failed, "failed")
@@ -198,7 +198,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			staging, ok := m["master/tasks_staging"]
 			starting, ok := m["master/tasks_starting"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(running, "running")
 			c.(*settableCounterVec).Set(staging, "staging")
@@ -223,7 +223,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			statusUpdateInvalid, ok := m["master/invalid_status_updates"]
 
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 			c.(*settableCounterVec).Set(frameworkToExecutorValid, "framework", "executor", "", "valid")
 			c.(*settableCounterVec).Set(frameworkToExecutorInvalid, "framework", "executor", "", "invalid")
@@ -256,7 +256,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			httpRequests, ok := m["master/event_queue_http_requests"]
 			messages, ok := m["master/event_queue_messages"]
 			if !ok {
-				return notFoundInMap
+				return errNotFoundInMap
 			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("message").Set(messages)
