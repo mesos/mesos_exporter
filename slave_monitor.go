@@ -29,6 +29,7 @@ type (
 		MemRssBytes   float64 `json:"mem_rss_bytes"`
 		MemTotalBytes float64 `json:"mem_total_bytes"`
 		MemCacheBytes float64 `json:"mem_cache_bytes"`
+		MemSwapBytes  float64 `json:"mem_swap_bytes"`
 
 		DiskLimitBytes float64 `json:"disk_limit_bytes"`
 		DiskUsedBytes  float64 `json:"disk_used_bytes"`
@@ -125,6 +126,11 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"Current page cache memory usage",
 				labels, nil,
 			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemCacheBytes }},
+			prometheus.NewDesc(
+				"mem_swap_bytes",
+				"Current swap usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemSwapBytes }},
 
 			// Disk
 			prometheus.NewDesc(
