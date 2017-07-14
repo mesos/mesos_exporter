@@ -77,12 +77,12 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"mem_limit_bytes",
 				"Current memory limit in bytes",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.MemLimitBytes }},
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemLimitBytes }},
 			prometheus.NewDesc(
 				"mem_rss_bytes",
 				"Current rss memory usage",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.MemRssBytes }},
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemRssBytes }},
 
 			// Network
 			// - RX
