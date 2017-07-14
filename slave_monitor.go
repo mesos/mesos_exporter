@@ -23,6 +23,9 @@ type (
 		MemLimitBytes float64 `json:"mem_limit_bytes"`
 		MemRssBytes   float64 `json:"mem_rss_bytes"`
 
+		DiskLimitBytes float64 `json:"disk_limit_bytes"`
+		DiskUsedBytes  float64 `json:"disk_used_bytes"`
+
 		NetRxBytes   float64 `json:"net_rx_bytes"`
 		NetRxDropped float64 `json:"net_rx_dropped"`
 		NetRxErrors  float64 `json:"net_rx_errors"`
@@ -83,6 +86,18 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"Current rss memory usage",
 				labels, nil,
 			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemRssBytes }},
+
+			// Disk
+			prometheus.NewDesc(
+				"disk_limit_bytes",
+				"Current disk limit in bytes",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.DiskLimitBytes }},
+			prometheus.NewDesc(
+				"disk_used_bytes",
+				"Current disk usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.DiskUsedBytes }},
 
 			// Network
 			// - RX
