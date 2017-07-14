@@ -100,12 +100,12 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"network_receive_errors_total",
 				"Total errors while receiving",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxErrors }},
 			prometheus.NewDesc(
 				"network_receive_packets_total",
 				"Total packets received",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxPackets }},
 			// - TX
 			prometheus.NewDesc(
 				"network_transmit_bytes_total",
@@ -121,12 +121,12 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"network_transmit_errors_total",
 				"Total errors while transmitting",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxErrors }},
 			prometheus.NewDesc(
 				"network_transmit_packets_total",
 				"Total packets transmitted",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxPackets }},
 		},
 	}
 }
