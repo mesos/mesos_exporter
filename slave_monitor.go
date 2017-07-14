@@ -15,6 +15,9 @@ type (
 	}
 
 	statistics struct {
+		Processes             float64 `json:"processes"`
+		Threads               float64 `json:"threads"`
+
 		CpusLimit             float64 `json:"cpus_limit"`
 		CpusSystemTimeSecs    float64 `json:"cpus_system_time_secs"`
 		CpusUserTimeSecs      float64 `json:"cpus_user_time_secs"`
@@ -53,6 +56,18 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 	return &slaveCollector{
 		httpClient: httpClient,
 		metrics: map[*prometheus.Desc]metric{
+			// Processes
+			prometheus.NewDesc(
+				"processes",
+				"Current number of processes",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.Processes }},
+			prometheus.NewDesc(
+				"threads",
+				"Current number of threads",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.Threads }},
+
 			// CPU
 			prometheus.NewDesc(
 				"cpus_limit",
