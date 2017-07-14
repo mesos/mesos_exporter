@@ -15,8 +15,8 @@ type (
 	}
 
 	statistics struct {
-		Processes             float64 `json:"processes"`
-		Threads               float64 `json:"threads"`
+		Processes float64 `json:"processes"`
+		Threads   float64 `json:"threads"`
 
 		CpusLimit             float64 `json:"cpus_limit"`
 		CpusSystemTimeSecs    float64 `json:"cpus_system_time_secs"`
