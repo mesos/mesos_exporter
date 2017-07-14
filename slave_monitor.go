@@ -22,9 +22,13 @@ type (
 		CpusSystemTimeSecs    float64 `json:"cpus_system_time_secs"`
 		CpusUserTimeSecs      float64 `json:"cpus_user_time_secs"`
 		CpusThrottledTimeSecs float64 `json:"cpus_throttled_time_secs"`
+		CpusNrPeriods         float64 `json:"cpus_nr_periods"`
+		CpusNrThrottled       float64 `json:"cpus_nr_throttled"`
 
 		MemLimitBytes float64 `json:"mem_limit_bytes"`
 		MemRssBytes   float64 `json:"mem_rss_bytes"`
+		MemTotalBytes float64 `json:"mem_total_bytes"`
+		MemCacheBytes float64 `json:"mem_cache_bytes"`
 
 		DiskLimitBytes float64 `json:"disk_limit_bytes"`
 		DiskUsedBytes  float64 `json:"disk_used_bytes"`
@@ -86,9 +90,19 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusUserTimeSecs }},
 			prometheus.NewDesc(
 				"cpu_throttled_seconds_total",
-				"Total time CPU was throttled",
+				"Total time CPU was throttled due to CFS bandwidth control",
 				labels, nil,
 			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusThrottledTimeSecs }},
+			prometheus.NewDesc(
+				"cpu_nr_periods_total",
+				"Total number of elapsed CFS enforcement intervals",
+				labels, nil,
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusNrPeriods }},
+			prometheus.NewDesc(
+				"cpu_nr_throttled_total",
+				"Total number of throttled CFS enforcement intervals.",
+				labels, nil,
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusNrThrottled }},
 
 			// Memory
 			prometheus.NewDesc(
@@ -101,6 +115,16 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"Current rss memory usage",
 				labels, nil,
 			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemRssBytes }},
+			prometheus.NewDesc(
+				"mem_total_bytes",
+				"Current total memory usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemTotalBytes }},
+			prometheus.NewDesc(
+				"mem_cache_bytes",
+				"Current page cache memory usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemCacheBytes }},
 
 			// Disk
 			prometheus.NewDesc(
