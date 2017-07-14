@@ -15,13 +15,24 @@ type (
 	}
 
 	statistics struct {
+		Processes float64 `json:"processes"`
+		Threads   float64 `json:"threads"`
+
 		CpusLimit             float64 `json:"cpus_limit"`
 		CpusSystemTimeSecs    float64 `json:"cpus_system_time_secs"`
 		CpusUserTimeSecs      float64 `json:"cpus_user_time_secs"`
 		CpusThrottledTimeSecs float64 `json:"cpus_throttled_time_secs"`
+		CpusNrPeriods         float64 `json:"cpus_nr_periods"`
+		CpusNrThrottled       float64 `json:"cpus_nr_throttled"`
 
 		MemLimitBytes float64 `json:"mem_limit_bytes"`
 		MemRssBytes   float64 `json:"mem_rss_bytes"`
+		MemTotalBytes float64 `json:"mem_total_bytes"`
+		MemCacheBytes float64 `json:"mem_cache_bytes"`
+		MemSwapBytes  float64 `json:"mem_swap_bytes"`
+
+		DiskLimitBytes float64 `json:"disk_limit_bytes"`
+		DiskUsedBytes  float64 `json:"disk_used_bytes"`
 
 		NetRxBytes   float64 `json:"net_rx_bytes"`
 		NetRxDropped float64 `json:"net_rx_dropped"`
@@ -50,6 +61,18 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 	return &slaveCollector{
 		httpClient: httpClient,
 		metrics: map[*prometheus.Desc]metric{
+			// Processes
+			prometheus.NewDesc(
+				"processes",
+				"Current number of processes",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.Processes }},
+			prometheus.NewDesc(
+				"threads",
+				"Current number of threads",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.Threads }},
+
 			// CPU
 			prometheus.NewDesc(
 				"cpus_limit",
@@ -68,21 +91,58 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusUserTimeSecs }},
 			prometheus.NewDesc(
 				"cpu_throttled_seconds_total",
-				"Total time CPU was throttled",
+				"Total time CPU was throttled due to CFS bandwidth control",
 				labels, nil,
 			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusThrottledTimeSecs }},
+			prometheus.NewDesc(
+				"cpu_nr_periods_total",
+				"Total number of elapsed CFS enforcement intervals",
+				labels, nil,
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusNrPeriods }},
+			prometheus.NewDesc(
+				"cpu_nr_throttled_total",
+				"Total number of throttled CFS enforcement intervals.",
+				labels, nil,
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.CpusNrThrottled }},
 
 			// Memory
 			prometheus.NewDesc(
 				"mem_limit_bytes",
 				"Current memory limit in bytes",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.MemLimitBytes }},
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemLimitBytes }},
 			prometheus.NewDesc(
 				"mem_rss_bytes",
 				"Current rss memory usage",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.MemRssBytes }},
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemRssBytes }},
+			prometheus.NewDesc(
+				"mem_total_bytes",
+				"Current total memory usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemTotalBytes }},
+			prometheus.NewDesc(
+				"mem_cache_bytes",
+				"Current page cache memory usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemCacheBytes }},
+			prometheus.NewDesc(
+				"mem_swap_bytes",
+				"Current swap usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.MemSwapBytes }},
+
+			// Disk
+			prometheus.NewDesc(
+				"disk_limit_bytes",
+				"Current disk limit in bytes",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.DiskLimitBytes }},
+			prometheus.NewDesc(
+				"disk_used_bytes",
+				"Current disk usage",
+				labels, nil,
+			): metric{prometheus.GaugeValue, func(s *statistics) float64 { return s.DiskUsedBytes }},
 
 			// Network
 			// - RX
@@ -100,12 +160,12 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"network_receive_errors_total",
 				"Total errors while receiving",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxErrors }},
 			prometheus.NewDesc(
 				"network_receive_packets_total",
 				"Total packets received",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetRxPackets }},
 			// - TX
 			prometheus.NewDesc(
 				"network_transmit_bytes_total",
@@ -121,12 +181,12 @@ func newSlaveMonitorCollector(httpClient *httpClient) prometheus.Collector {
 				"network_transmit_errors_total",
 				"Total errors while transmitting",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxErrors }},
 			prometheus.NewDesc(
 				"network_transmit_packets_total",
 				"Total packets transmitted",
 				labels, nil,
-			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxBytes }},
+			): metric{prometheus.CounterValue, func(s *statistics) float64 { return s.NetTxPackets }},
 		},
 	}
 }
