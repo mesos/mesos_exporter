@@ -13,7 +13,7 @@ metrics from an agent.
 ```sh
 Usage of mesos-exporter:
   -addr string
-        Address to listen on (default ":9110")
+        Address to listen on (default ":9105")
   -exportedSlaveAttributes string
         Comma-separated list of slave attributes to include in the corresponding metric
   -exportedTaskLabels string
