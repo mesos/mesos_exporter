@@ -1,3 +1,5 @@
+go:
+    cgo: true
 repository:
     path: github.com/mesosphere/mesos_exporter
 tarball:
