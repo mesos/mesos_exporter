@@ -1,10 +1,5 @@
 # Prometheus Mesos Exporter
-Exporter for Mesos master and agent metrics
-
-## Installing
-```sh
-$ go get github.com/mesosphere/mesos_exporter
-```
+Exporter for Mesos master and agent metrics.
 
 ## Using
 The Mesos Exporter can either expose cluster wide metrics from a master or task
@@ -29,15 +24,90 @@ Usage of mesos_exporter:
         Mesos endpoints
 ```
 When using HTTP authentication, the following values are read from the environment:
+
 - `MESOS_EXPORTER_USERNAME`
 - `MESOS_EXPORTER_PASSWORD`
 
----
 
-Usually you would run one exporter with `-master` pointing to the current
-leader and one exporter for each slave with `-slave` pointing to it. In
-a default Mesos / DC/OS setup, you should be able to run the mesos-exporter
-like this:
+## Prometheus Configuration
 
-- Master: `mesos_exporter -master http://leader.mesos:5050`
+Usually you would run one exporter with `-master` for each master and one
+exporter for each slave with `-slave`. Monitoring each master individually
+ensures that the cluster can be monitored even if the underlying Mesos cluster
+is in an degraded state.
+
+- Master: `mesos_exporter -master http://localhost:5050`
 - Agent: `mesos_exporter -slave http://localhost:5051`
+
+The necessary Prometheus configuration could look like this:
+
+```
+- job_name: mesos-master
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  static_configs:
+  - targets:
+    - master1.mesos.example.org:9105
+    - master1.mesos.example.org:9105
+    - master1.mesos.example.org:9105
+
+- job_name: mesos-slave
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  static_configs:
+  - targets:
+    - node1.mesos.example.org:9105
+    - node2.mesos.example.org:9105
+    - node3.mesos.example.org:9105
+```
+
+
+A minimal set of alerts to ensure your cluster is operational could then be defined
+as follows:
+
+```
+ALERT MesosDown
+  IF (up{job=~"mesos.*"} == 0) or (irate(mesos_collector_errors_total[5m]) > 0)
+  FOR 5m
+  LABELS { severity="warning" }
+  ANNOTATIONS {
+    description="Either the exporter or the associated Mesos component is down.",
+    summary="The Mesos instance {{$labels.instance}} cannot be scraped."
+  }
+
+ALERT MesosMasterLeader
+  IF sum(mesos_master_elected{job="mesos-master"}) != 1
+  FOR 5m
+  LABELS { severity="page" }
+  ANNOTATIONS {
+    description="Agents and frameworks require a unique leading Mesos master.",
+    summary="Expected one leading Mesos master but there are {{ $value }}."
+  }
+
+ALERT MesosMasterTooManyRestarts
+  IF resets(mesos_master_uptime_seconds{job="mesos-master"}[1h]) > 10
+  FOR 5m
+  LABELS { severity="page" }
+  ANNOTATIONS {
+    description="The number of seconds the process has been running is resetting regularly.",
+    summary="The Mesos master {{$labels.instance}} has restarted {{ $value }} times in the last hour."
+  }
+
+ALERT MesosSlaveActive
+  IF sum(mesos_master_slaves_state{state="active"}) < 0.9 * count(up{job="mesos-slave"})
+  FOR 5m
+  LABELS { severity="page" }
+  ANNOTATIONS {
+    description="Mesos agents must be registered with the master in order to receive tasks.",
+    summary="More than 10% of all Mesos agents dropped out. Only {{ $value }} active agents remaining."
+  }
+
+ALERT MesosSlaveTooManyRestarts
+  IF resets(mesos_slave_uptime_seconds{job="mesos-slave"}[1h]) > 10
+  FOR 5m
+  LABELS { severity="page" }
+  ANNOTATIONS {
+    description="The number of seconds the process has been running is resetting regularly.",
+    summary="The Mesos agent {{$labels.instance}} has restarted {{ $value }} times in the last hour."
+  }
+```
