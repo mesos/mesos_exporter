@@ -2,6 +2,8 @@ go:
     cgo: true
 repository:
     path: github.com/mesosphere/mesos_exporter
+build:
+    flags: -a
 tarball:
     files:
         - LICENSE

@@ -34,7 +34,7 @@ When using HTTP authentication, the following values are read from the environme
 Usually you would run one exporter with `-master` for each master and one
 exporter for each slave with `-slave`. Monitoring each master individually
 ensures that the cluster can be monitored even if the underlying Mesos cluster
-is in an degraded state.
+is in a degraded state.
 
 - Master: `mesos_exporter -master http://localhost:5050`
 - Agent: `mesos_exporter -slave http://localhost:5051`
@@ -48,8 +48,8 @@ The necessary Prometheus configuration could look like this:
   static_configs:
   - targets:
     - master1.mesos.example.org:9105
-    - master1.mesos.example.org:9105
-    - master1.mesos.example.org:9105
+    - master2.mesos.example.org:9105
+    - master3.mesos.example.org:9105
 
 - job_name: mesos-slave
   scrape_interval: 15s
