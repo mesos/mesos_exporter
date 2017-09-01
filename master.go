@@ -193,16 +193,20 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*settableCounterVec).Set(lost, "lost")
 			return nil
 		},
-		counter("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
+		gauge("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["master/tasks_running"]
 			staging, ok := m["master/tasks_staging"]
 			starting, ok := m["master/tasks_starting"]
+			killing, ok := m["master/tasks_killing"]
+			unreachable, ok := m["master/tasks_unreachable"]
 			if !ok {
 				return notFoundInMap
 			}
-			c.(*settableCounterVec).Set(running, "running")
-			c.(*settableCounterVec).Set(staging, "staging")
-			c.(*settableCounterVec).Set(starting, "starting")
+			c.(*prometheus.GaugeVec).WithLabelValues("running").Set(running)
+			c.(*prometheus.GaugeVec).WithLabelValues("staging").Set(staging)
+			c.(*prometheus.GaugeVec).WithLabelValues("starting").Set(starting)
+			c.(*prometheus.GaugeVec).WithLabelValues("killing").Set(killing)
+			c.(*prometheus.GaugeVec).WithLabelValues("unreachable").Set(unreachable)
 			return nil
 		},
 
