@@ -23,7 +23,7 @@ Usage of mesos_exporter:
   -slave string
         Expose metrics from slave running on this URL
   -timeout duration
-        Master polling timeout (default 5s)
+        Master polling timeout (default 10s)
   -trustedCerts string
         Comma-separated list of certificates (.pem files) trusted for requests to
         Mesos endpoints

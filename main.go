@@ -78,7 +78,7 @@ func main() {
 	addr := fs.String("addr", ":9105", "Address to listen on")
 	masterURL := fs.String("master", "", "Expose metrics from master running on this URL")
 	slaveURL := fs.String("slave", "", "Expose metrics from slave running on this URL")
-	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
+	timeout := fs.Duration("timeout", 10*time.Second, "Master polling timeout")
 	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the corresponding metric")
 	exportedSlaveAttributes := fs.String("exportedSlaveAttributes", "", "Comma-separated list of slave attributes to include in the corresponding metric")
 	trustedCerts := fs.String("trustedCerts", "", "Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints")
