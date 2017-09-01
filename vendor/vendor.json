@@ -9,10 +9,10 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
+			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "8ee79997227bf9b34611aee7946ae64735e6fd93",
-			"revisionTime": "2016-11-17T03:31:26Z"
+			"revision": "5afd06f9d81a86d6e3bb7dc702d6bd148ea3ff23",
+			"revisionTime": "2017-09-01T04:27:39Z"
 		},
 		{
 			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
@@ -21,43 +21,47 @@
 			"revisionTime": "2016-04-24T11:30:07Z"
 		},
 		{
-			"checksumSHA1": "KkB+77Ziom7N6RzSbyUwYGrmDeU=",
+			"checksumSHA1": "N8DZCxgnkiFM2cdn0/jB6jRu1TM=",
 			"path": "github.com/prometheus/client_golang/prometheus",
-			"revision": "c5b7fccd204277076155f10851dad72b76a49317",
-			"revisionTime": "2016-08-17T15:48:24Z",
-			"version": "v0.8",
-			"versionExact": "v0.8.0"
+			"revision": "967789050ba94deca04a5e84cce8ad472ce313c1",
+			"revisionTime": "2017-08-31T13:19:02Z"
 		},
 		{
 			"checksumSHA1": "DvwvOlPNAgRntBzt3b3OSRMS2N4=",
 			"path": "github.com/prometheus/client_model/go",
-			"revision": "fa8ad6fec33561be4280a8f0514318c79d7f6cb6",
-			"revisionTime": "2015-02-12T10:17:44Z"
+			"revision": "6f3806018612930941127f2a7c6c453ba2c527d2",
+			"revisionTime": "2017-02-16T18:52:47Z"
 		},
 		{
-			"checksumSHA1": "mHyjbJ3BWOfUV6q9f5PBt0gaY1k=",
+			"checksumSHA1": "xfnn0THnqNwjwimeTClsxahYrIo=",
 			"path": "github.com/prometheus/common/expfmt",
-			"revision": "195bde7883f7c39ea62b0d92ab7359b5327065cb",
-			"revisionTime": "2016-12-01T12:35:08Z"
+			"revision": "bc8b88226a1210b016e9993b1d75f858c9c8f778",
+			"revisionTime": "2017-08-30T19:05:55Z"
 		},
 		{
 			"checksumSHA1": "GWlM3d2vPYyNATtTFgftS10/A9w=",
 			"path": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
-			"revision": "195bde7883f7c39ea62b0d92ab7359b5327065cb",
-			"revisionTime": "2016-12-01T12:35:08Z"
+			"revision": "bc8b88226a1210b016e9993b1d75f858c9c8f778",
+			"revisionTime": "2017-08-30T19:05:55Z"
 		},
 		{
-			"checksumSHA1": "bRBAUlwQCpJvDqeLb8fq2ZopqkY=",
+			"checksumSHA1": "3VoqH7TFfzA6Ds0zFzIbKCUvBmw=",
 			"path": "github.com/prometheus/common/model",
-			"revision": "195bde7883f7c39ea62b0d92ab7359b5327065cb",
-			"revisionTime": "2016-12-01T12:35:08Z"
+			"revision": "bc8b88226a1210b016e9993b1d75f858c9c8f778",
+			"revisionTime": "2017-08-30T19:05:55Z"
 		},
 		{
-			"checksumSHA1": "L+p4t3KrLDAKJnrreOz2BZIt9Mg=",
+			"checksumSHA1": "ihxJIjxtbEYdQKwA0D0nRipj95I=",
 			"path": "github.com/prometheus/procfs",
-			"revision": "fcdb11ccb4389efb1b210b7ffb623ab71c5fdd60",
-			"revisionTime": "2016-12-06T22:21:41Z"
+			"revision": "e645f4e5aaa8506fc71d6edbc5c4ff02c04c46f2",
+			"revisionTime": "2017-07-03T10:12:42Z"
+		},
+		{
+			"checksumSHA1": "xCiFAAwVTrjsfZT1BIJQ3DgeNCY=",
+			"path": "github.com/prometheus/procfs/xfs",
+			"revision": "e645f4e5aaa8506fc71d6edbc5c4ff02c04c46f2",
+			"revisionTime": "2017-07-03T10:12:42Z"
 		}
 	],
-	"rootPath": "mesos_exporter"
+	"rootPath": "github.com/mesosphere/mesos_exporter"
 }
