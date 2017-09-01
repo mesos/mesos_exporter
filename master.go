@@ -268,17 +268,6 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*prometheus.GaugeVec).WithLabelValues("dispatches").Set(dispatches)
 			return nil
 		},
-
-		// Master stats about registrar
-		prometheus.NewHistogram(prometheus.HistogramOpts{
-			Namespace: "mesos",
-			Subsystem: "master",
-			Name:      "state_store_seconds",
-			Help:      "Registry write latency in seconds",
-		}): func(m metricMap, c prometheus.Collector) error {
-			//	c.(*prometheus.Histogram).Buckets //FIXME
-			return nil
-		},
 	}
 	return newMetricCollector(httpClient, metrics)
 }
