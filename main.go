@@ -34,7 +34,7 @@ func getX509CertPool(pemFiles []string) *x509.CertPool {
 		}
 		ok := pool.AppendCertsFromPEM(content)
 		if !ok {
-			log.Fatal("Error parsing .pem file %s", f)
+			log.Fatalf("Error parsing .pem file %s", f)
 		}
 	}
 	return pool

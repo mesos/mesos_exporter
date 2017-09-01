@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.0.0-rc3] - 2017-09-02
 ### Changed
 - Build releases with cgo enabled. This allows the exporter to use the system cert store
-  which can simplify deployments significantly. 
+  which can simplify deployments significantly.
 
 ## [1.0.0-rc2] - 2017-09-01
 ### Added
