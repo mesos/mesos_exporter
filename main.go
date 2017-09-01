@@ -81,7 +81,6 @@ func main() {
 	timeout := fs.Duration("timeout", 5*time.Second, "Master polling timeout")
 	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the corresponding metric")
 	exportedSlaveAttributes := fs.String("exportedSlaveAttributes", "", "Comma-separated list of slave attributes to include in the corresponding metric")
-	ignoreCompletedFrameworkTasks := fs.Bool("ignoreCompletedFrameworkTasks", false, "Don't export task_state_time metric")
 	trustedCerts := fs.String("trustedCerts", "", "Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints")
 
 	fs.Parse(os.Args[1:])
@@ -107,7 +106,7 @@ func main() {
 		for _, f := range []func(*httpClient) prometheus.Collector{
 			newMasterCollector,
 			func(c *httpClient) prometheus.Collector {
-				return newMasterStateCollector(c, *ignoreCompletedFrameworkTasks, slaveAttributeLabels)
+				return newMasterStateCollector(c, slaveAttributeLabels)
 			},
 		} {
 			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool))

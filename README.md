@@ -18,8 +18,6 @@ Usage of mesos_exporter:
         Comma-separated list of slave attributes to include in the corresponding metric
   -exportedTaskLabels string
         Comma-separated list of task labels to include in the corresponding metric
-  -ignoreCompletedFrameworkTasks
-        Don't export task_state_time metric
   -master string
         Expose metrics from master running on this URL
   -slave string
