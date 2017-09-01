@@ -124,42 +124,36 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*settableCounterVec).Set(removals-completed, "died")
 			return nil
 		},
-		gauge("master", "slaves_state", "Current number of slaves known to the master per connection and registration state.", "connection_state", "registration_state"): func(m metricMap, c prometheus.Collector) error {
+		gauge("master", "slaves_state", "Current number of slaves known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["master/slaves_active"]
 			inactive, ok := m["master/slaves_inactive"]
 			disconnected, ok := m["master/slaves_disconnected"]
+			connected, ok := m["master/slaves_connected"]
 
 			if !ok {
 				return notFoundInMap
 			}
-			// FIXME: Make sure those assumptions are right
-			// Every "active" node is connected to the master
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
-			// Every "inactive" node is connected but node sending offers
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
-			// Every "disconnected" node is "inactive"
-			c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
-			// Every "connected" node is either active or inactive
+			c.(*prometheus.GaugeVec).WithLabelValues("active").Set(active)
+			c.(*prometheus.GaugeVec).WithLabelValues("inactive").Set(inactive)
+			c.(*prometheus.GaugeVec).WithLabelValues("disconnected").Set(disconnected)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected").Set(connected)
 			return nil
 		},
 
 		// Master stats about frameworks
-		gauge("master", "frameworks_state", "Current number of frames known to the master per connection and registration state.", "connection_state", "registration_state"): func(m metricMap, c prometheus.Collector) error {
+		gauge("master", "frameworks_state", "Current number of frames known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["master/frameworks_active"]
+			connected, ok := m["master/frameworks_connected"]
 			inactive, ok := m["master/frameworks_inactive"]
 			disconnected, ok := m["master/frameworks_disconnected"]
 
 			if !ok {
 				return notFoundInMap
 			}
-			// FIXME: Make sure those assumptions are right
-			// Every "active" framework is connected to the master
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
-			// Every "inactive" framework is connected but framework sending offers
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
-			// Every "disconnected" framework is "inactive"
-			c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
-			// Every "connected" framework is either active or inactive
+			c.(*prometheus.GaugeVec).WithLabelValues("active").Set(active)
+			c.(*prometheus.GaugeVec).WithLabelValues("inactive").Set(inactive)
+			c.(*prometheus.GaugeVec).WithLabelValues("disconnected").Set(disconnected)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected").Set(connected)
 			return nil
 		},
 		prometheus.NewGauge(prometheus.GaugeOpts{
