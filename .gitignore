@@ -1,1 +1,3 @@
 mesos_exporter
+.tarballs
+.build
