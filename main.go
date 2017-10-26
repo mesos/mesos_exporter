@@ -49,9 +49,25 @@ func getX509CertPool(pemFiles []string) *x509.CertPool {
 	return pool
 }
 
-func mkHTTPClient(url string, timeout time.Duration, auth authInfo, certPool *x509.CertPool) *httpClient {
+func getX509ClientCertificates(certFile, keyFile string) []tls.Certificate {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"certFile": certFile,
+			"keyFile":  keyFile,
+			"error":    err,
+		}).Fatal("Error loading TLS client certificates")
+	}
+	return []tls.Certificate{cert}
+}
+
+func mkHttpClient(url string, timeout time.Duration, auth authInfo, certPool *x509.CertPool, certs []tls.Certificate) *httpClient {
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{RootCAs: certPool, InsecureSkipVerify: auth.skipSSLVerify},
+		TLSClientConfig: &tls.Config{
+			Certificates:       certs,
+			RootCAs:            certPool,
+			InsecureSkipVerify: auth.skipSSLVerify,
+		},
 	}
 
 	// HTTP Redirects are authenticated by Go (>=1.8), when redirecting to an identical domain or a subdomain.
@@ -133,6 +149,8 @@ func main() {
 	exportedTaskLabels := fs.String("exportedTaskLabels", "", "Comma-separated list of task labels to include in the corresponding metric")
 	exportedSlaveAttributes := fs.String("exportedSlaveAttributes", "", "Comma-separated list of slave attributes to include in the corresponding metric")
 	trustedCerts := fs.String("trustedCerts", "", "Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints")
+	clientCertFile := fs.String("clientCert", "", "Path to Mesos client TLS certificate (.pem file)")
+	clientKeyFile := fs.String("clientKey", "", "Path to Mesos client TLS key file (.pem file)")
 	strictMode := fs.Bool("strictMode", false, "Use strict mode authentication")
 	username := fs.String("username", "", "Username for authentication")
 	password := fs.String("password", "", "Password for authentication")
@@ -201,6 +219,15 @@ func main() {
 		certPool = getX509CertPool(csvInputToList(*trustedCerts))
 	}
 
+	var certs []tls.Certificate
+	if (*clientCertFile != "" && *clientKeyFile == "") ||
+		(*clientCertFile == "" && *clientKeyFile != "") {
+		log.Fatal("Must supply both clientCert and clientKey to use TLS mutual auth")
+	}
+	if *clientCertFile != "" && *clientKeyFile != "" {
+		certs = getX509ClientCertificates(*clientCertFile, *clientKeyFile)
+	}
+
 	slaveAttributeLabels := csvInputToList(*exportedSlaveAttributes)
 	slaveTaskLabels := csvInputToList(*exportedTaskLabels)
 
@@ -212,7 +239,7 @@ func main() {
 				return newMasterStateCollector(c, slaveAttributeLabels)
 			},
 		} {
-			c := f(mkHTTPClient(*masterURL, *timeout, auth, certPool))
+			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool, certs))
 			if err := prometheus.Register(c); err != nil {
 				log.WithField("error", err).Fatal("Prometheus Register() error")
 			}
@@ -233,7 +260,7 @@ func main() {
 		}
 
 		for _, f := range slaveCollectors {
-			c := f(mkHTTPClient(*slaveURL, *timeout, auth, certPool))
+			c := f(mkHttpClient(*slaveURL, *timeout, auth, certPool, certs))
 			if err := prometheus.Register(c); err != nil {
 				log.WithField("error", err).Fatal("Prometheus Register() error")
 			}
