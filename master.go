@@ -226,6 +226,125 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*prometheus.GaugeVec).WithLabelValues("dispatches").Set(dispatches)
 			return nil
 		},
+
+		// Master stats about allocations
+
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "allocation_run_ms_count",
+			Help:      "Number of allocation algorithm time measurements in the window",
+		}): func(m metricMap, c prometheus.Collector) error {
+			count := m["allocator/mesos/allocation_runs"]
+			c.(prometheus.Gauge).Set(count)
+			return nil
+		},
+
+		gauge("master", "allocation_run_ms", "Time spent in allocation algorithm in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
+			mean := m["allocator/mesos/allocation_run_ms"]
+			min := m["allocator/mesos/allocation_run_ms/min"]
+			max := m["allocator/mesos/allocation_run_ms/max"]
+			p50 := m["allocator/mesos/allocation_run_ms/p50"]
+			p90 := m["allocator/mesos/allocation_run_ms/p90"]
+			p95 := m["allocator/mesos/allocation_run_ms/p95"]
+			p99 := m["allocator/mesos/allocation_run_ms/p99"]
+			p999 := m["allocator/mesos/allocation_run_ms/p999"]
+			p9999 := m["allocator/mesos/allocation_run_ms/p9999"]
+
+			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
+			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
+			c.(*prometheus.GaugeVec).WithLabelValues("max").Set(max)
+			c.(*prometheus.GaugeVec).WithLabelValues("p50").Set(p50)
+			c.(*prometheus.GaugeVec).WithLabelValues("p90").Set(p90)
+			c.(*prometheus.GaugeVec).WithLabelValues("p95").Set(p95)
+			c.(*prometheus.GaugeVec).WithLabelValues("p99").Set(p99)
+			c.(*prometheus.GaugeVec).WithLabelValues("p999").Set(p999)
+			c.(*prometheus.GaugeVec).WithLabelValues("p9999").Set(p9999)
+			return nil
+		},
+
+		prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "allocation_runs",
+			Help:      "Number of times the allocation algorithm has run",
+		}): func(m metricMap, c prometheus.Collector) error {
+			count := m["allocator/mesos/allocation_runs"]
+			c.(prometheus.Counter).Add(count)
+			return nil
+		},
+
+		prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "allocation_run_latency_ms_count",
+			Help:      "Number of allocation batch latency measurements in the window",
+		}): func(m metricMap, c prometheus.Collector) error {
+			count := m["allocator/mesos/allocation_runs"]
+			c.(prometheus.Counter).Add(count)
+			return nil
+		},
+
+		gauge("master", "allocation_run_latency_ms", "Allocation batch latency in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
+			mean := m["allocator/mesos/allocation_run_latency_ms"]
+			min := m["allocator/mesos/allocation_run_latency_ms/min"]
+			max := m["allocator/mesos/allocation_run_latency_ms/max"]
+			p50 := m["allocator/mesos/allocation_run_latency_ms/p50"]
+			p90 := m["allocator/mesos/allocation_run_latency_ms/p90"]
+			p95 := m["allocator/mesos/allocation_run_latency_ms/p95"]
+			p99 := m["allocator/mesos/allocation_run_latency_ms/p99"]
+			p999 := m["allocator/mesos/allocation_run_latency_ms/p999"]
+			p9999 := m["allocator/mesos/allocation_run_latency_ms/p9999"]
+
+			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
+			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
+			c.(*prometheus.GaugeVec).WithLabelValues("max").Set(max)
+			c.(*prometheus.GaugeVec).WithLabelValues("p50").Set(p50)
+			c.(*prometheus.GaugeVec).WithLabelValues("p90").Set(p90)
+			c.(*prometheus.GaugeVec).WithLabelValues("p95").Set(p95)
+			c.(*prometheus.GaugeVec).WithLabelValues("p99").Set(p99)
+			c.(*prometheus.GaugeVec).WithLabelValues("p999").Set(p999)
+			c.(*prometheus.GaugeVec).WithLabelValues("p9999").Set(p9999)
+			return nil
+		},
+
+		prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "mesos",
+			Subsystem: "master",
+			Name:      "event_queue_dispatches",
+			Help:      "Number of dispatch events in the event queue.",
+		}): func(m metricMap, c prometheus.Collector) error {
+			count := m["allocator/mesos/event_queue_dispatches"]
+			c.(prometheus.Gauge).Set(count)
+			return nil
+		},
+
+		gauge("master", "allocator_resources_cpus", "Number of CPUs offered or allocated", "type"): func(m metricMap, c prometheus.Collector) error {
+			total := m["allocator/mesos/resources/cpus/total"]
+			offeredOrAllocated := m["allocator/mesos/resources/cpus/offered_or_allocated"]
+
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
+			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
+			return nil
+		},
+
+		gauge("master", "allocator_resources_disk", "Allocated or offered disk space in MB", "type"): func(m metricMap, c prometheus.Collector) error {
+			total := m["allocator/mesos/resources/disk/total"]
+			offeredOrAllocated := m["allocator/mesos/resources/disk/offered_or_allocated"]
+
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
+			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
+			return nil
+		},
+
+		gauge("master", "allocator_resources_mem", "Allocated or offered memory in MB", "type"): func(m metricMap, c prometheus.Collector) error {
+			total := m["allocator/mesos/resources/mem/total"]
+			offeredOrAllocated := m["allocator/mesos/resources/mem/offered_or_allocated"]
+
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
+			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
+			return nil
+		},
 	}
 	return newMetricCollector(httpClient, metrics)
 }
