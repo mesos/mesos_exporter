@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strings"
+	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -316,6 +318,56 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			count := m["allocator/mesos/event_queue_dispatches"]
 			c.(prometheus.Gauge).Set(count)
+			return nil
+		},
+
+		gauge("master", "allocator_offer_filters_active", "Number of active offer filters for all frameworks within the role", "role"): func(m metricMap, c prometheus.Collector) error {
+			re, err := regexp.Compile("allocator/mesos/offer_filters/roles/(.*?)/active")
+			if err != nil {
+				return fmt.Errorf("could not compile allocator_offer_filters_active regex: %s", err)
+			}
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 2 {
+					continue
+				}
+				role := matches[1]
+				c.(*prometheus.GaugeVec).WithLabelValues(role).Set(value)
+			}
+			return nil
+		},
+
+		gauge("master", "allocator_role_quota_offered_or_allocated", "Amount of resources considered offered or allocated towards a role's quota guarantee.", "role", "resource"): func(m metricMap, c prometheus.Collector) error {
+			re, err := regexp.Compile("allocator/mesos/quota/roles/(.*?)/resources/(.*?)/offered_or_allocated")
+			if err != nil {
+				return fmt.Errorf("could not compile allocator_role_quota_offered_or_allocated regex: %s", err)
+			}
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				role := matches[1]
+				resource := matches[2]
+				c.(*prometheus.GaugeVec).WithLabelValues(role, resource).Set(value)
+			}
+			return nil
+		},
+
+		gauge("master", "allocator_role_quota_guarantee", "Amount of resources guaranteed for a role via quota", "role", "resource"): func(m metricMap, c prometheus.Collector) error {
+			re, err := regexp.Compile("allocator/mesos/quota/roles/(.*?)/resources/(.*?)/guarantee")
+			if err != nil {
+				return fmt.Errorf("could not compile allocator_role_quota_guarantee regex: %s", err)
+			}
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				role := matches[1]
+				resource := matches[2]
+				c.(*prometheus.GaugeVec).WithLabelValues(role, resource).Set(value)
+			}
 			return nil
 		},
 
