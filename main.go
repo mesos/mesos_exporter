@@ -125,12 +125,9 @@ func main() {
 			func(c *httpClient) prometheus.Collector {
 				return newSlaveMonitorCollector(c)
 			},
-		}
-
-		if len(slaveTaskLabels) > 0 || len(slaveAttributeLabels) > 0 {
-			slaveCollectors = append(slaveCollectors, func(c *httpClient) prometheus.Collector {
+			func(c *httpClient) prometheus.Collector {
 				return newSlaveStateCollector(c, slaveTaskLabels, slaveAttributeLabels)
-			})
+			},
 		}
 
 		for _, f := range slaveCollectors {
