@@ -124,10 +124,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			return nil
 		},
 		gauge("master", "slaves_state", "Current number of slaves known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
-			active := m["master/slaves_active"]
-			inactive := m["master/slaves_inactive"]
-			disconnected := m["master/slaves_disconnected"]
-			connected := m["master/slaves_connected"]
+			active, ok := m["master/slaves_active"]
+			inactive, ok := m["master/slaves_inactive"]
+			disconnected, ok := m["master/slaves_disconnected"]
 			if !ok {
 				return errNotFoundInMap
 			}
@@ -145,10 +144,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Master stats about frameworks
 		gauge("master", "frameworks_state", "Current number of frames known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
-			active := m["master/frameworks_active"]
-			connected := m["master/frameworks_connected"]
-			inactive := m["master/frameworks_inactive"]
-			disconnected := m["master/frameworks_disconnected"]
+			active, ok := m["master/frameworks_active"]
+			inactive, ok := m["master/frameworks_inactive"]
+			disconnected, ok := m["master/frameworks_disconnected"]
 			if !ok {
 				return errNotFoundInMap
 			}

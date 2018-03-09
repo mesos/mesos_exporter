@@ -180,10 +180,10 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of messages by outcome of operation",
 			"type", "outcome"): func(m metricMap, c prometheus.Collector) error {
 
-			frameworkMessagesValid := m["slave/valid_framework_messages"]
-			frameworkMessagesInvalid := m["slave/invalid_framework_messages"]
-			statusUpdateValid := m["slave/valid_status_updates"]
-			statusUpdateInvalid := m["slave/invalid_status_updates"]
+			frameworkMessagesValid, ok := m["slave/valid_framework_messages"]
+			frameworkMessagesInvalid, ok := m["slave/invalid_framework_messages"]
+			statusUpdateValid, ok := m["slave/valid_status_updates"]
+			statusUpdateInvalid, ok := m["slave/invalid_status_updates"]
 			if !ok {
 				return errNotFoundInMap
 			}
