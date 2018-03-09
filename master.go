@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"regexp"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -276,15 +276,18 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		gauge("master", "allocation_run_ms", "Time spent in allocation algorithm in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
-			mean := m["allocator/mesos/allocation_run_ms"]
-			min := m["allocator/mesos/allocation_run_ms/min"]
-			max := m["allocator/mesos/allocation_run_ms/max"]
-			p50 := m["allocator/mesos/allocation_run_ms/p50"]
-			p90 := m["allocator/mesos/allocation_run_ms/p90"]
-			p95 := m["allocator/mesos/allocation_run_ms/p95"]
-			p99 := m["allocator/mesos/allocation_run_ms/p99"]
-			p999 := m["allocator/mesos/allocation_run_ms/p999"]
-			p9999 := m["allocator/mesos/allocation_run_ms/p9999"]
+			mean, ok := m["allocator/mesos/allocation_run_ms"]
+			min, ok := m["allocator/mesos/allocation_run_ms/min"]
+			max, ok := m["allocator/mesos/allocation_run_ms/max"]
+			p50, ok := m["allocator/mesos/allocation_run_ms/p50"]
+			p90, ok := m["allocator/mesos/allocation_run_ms/p90"]
+			p95, ok := m["allocator/mesos/allocation_run_ms/p95"]
+			p99, ok := m["allocator/mesos/allocation_run_ms/p99"]
+			p999, ok := m["allocator/mesos/allocation_run_ms/p999"]
+			p9999, ok := m["allocator/mesos/allocation_run_ms/p9999"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
 			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
@@ -321,15 +324,18 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		gauge("master", "allocation_run_latency_ms", "Allocation batch latency in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
-			mean := m["allocator/mesos/allocation_run_latency_ms"]
-			min := m["allocator/mesos/allocation_run_latency_ms/min"]
-			max := m["allocator/mesos/allocation_run_latency_ms/max"]
-			p50 := m["allocator/mesos/allocation_run_latency_ms/p50"]
-			p90 := m["allocator/mesos/allocation_run_latency_ms/p90"]
-			p95 := m["allocator/mesos/allocation_run_latency_ms/p95"]
-			p99 := m["allocator/mesos/allocation_run_latency_ms/p99"]
-			p999 := m["allocator/mesos/allocation_run_latency_ms/p999"]
-			p9999 := m["allocator/mesos/allocation_run_latency_ms/p9999"]
+			mean, ok := m["allocator/mesos/allocation_run_latency_ms"]
+			min, ok := m["allocator/mesos/allocation_run_latency_ms/min"]
+			max, ok := m["allocator/mesos/allocation_run_latency_ms/max"]
+			p50, ok := m["allocator/mesos/allocation_run_latency_ms/p50"]
+			p90, ok := m["allocator/mesos/allocation_run_latency_ms/p90"]
+			p95, ok := m["allocator/mesos/allocation_run_latency_ms/p95"]
+			p99, ok := m["allocator/mesos/allocation_run_latency_ms/p99"]
+			p999, ok := m["allocator/mesos/allocation_run_latency_ms/p999"]
+			p9999, ok := m["allocator/mesos/allocation_run_latency_ms/p9999"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
 			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
@@ -405,8 +411,11 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		gauge("master", "allocator_resources_cpus", "Number of CPUs offered or allocated", "type"): func(m metricMap, c prometheus.Collector) error {
-			total := m["allocator/mesos/resources/cpus/total"]
-			offeredOrAllocated := m["allocator/mesos/resources/cpus/offered_or_allocated"]
+			total, ok := m["allocator/mesos/resources/cpus/total"]
+			offeredOrAllocated, ok := m["allocator/mesos/resources/cpus/offered_or_allocated"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
@@ -414,8 +423,11 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		gauge("master", "allocator_resources_disk", "Allocated or offered disk space in MB", "type"): func(m metricMap, c prometheus.Collector) error {
-			total := m["allocator/mesos/resources/disk/total"]
-			offeredOrAllocated := m["allocator/mesos/resources/disk/offered_or_allocated"]
+			total, ok := m["allocator/mesos/resources/disk/total"]
+			offeredOrAllocated, ok := m["allocator/mesos/resources/disk/offered_or_allocated"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
@@ -423,8 +435,11 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		gauge("master", "allocator_resources_mem", "Allocated or offered memory in MB", "type"): func(m metricMap, c prometheus.Collector) error {
-			total := m["allocator/mesos/resources/mem/total"]
-			offeredOrAllocated := m["allocator/mesos/resources/mem/offered_or_allocated"]
+			total, ok := m["allocator/mesos/resources/mem/total"]
+			offeredOrAllocated, ok := m["allocator/mesos/resources/mem/offered_or_allocated"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("offered_or_allocated").Set(offeredOrAllocated)
