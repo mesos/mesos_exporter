@@ -42,48 +42,47 @@ type (
 func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string, slaveAttributeLabelList []string) *slaveStateCollector {
 	c := slaveStateCollector{httpClient, make(map[*prometheus.Desc]slaveMetric)}
 
-	if len(userTaskLabelList) > 0 {
-		defaultTaskLabels := []string{"source", "framework_id", "executor_id", "task_id"}
-		normalisedUserTaskLabelList := normaliseLabelList(userTaskLabelList)
-		taskLabelList := append(defaultTaskLabels, normalisedUserTaskLabelList...)
+	defaultTaskLabels := []string{"source", "framework_id", "executor_id", "task_id", "task_name"}
+	normalisedUserTaskLabelList := normaliseLabelList(userTaskLabelList)
+	taskLabelList := append(defaultTaskLabels, normalisedUserTaskLabelList...)
 
-		c.metrics[prometheus.NewDesc(
-			prometheus.BuildFQName("mesos", "slave", "task_labels"),
-			"Labels assigned to tasks running on slaves",
-			taskLabelList,
-			nil)] = slaveMetric{prometheus.CounterValue,
-			func(st *slaveState) []metricValue {
-				res := []metricValue{}
-				for _, f := range st.Frameworks {
-					for _, e := range f.Executors {
-						for _, t := range e.Tasks {
-							//Default labels
-							taskLabels := prometheus.Labels{
-								"source":       e.Source,
-								"framework_id": f.ID,
-								"executor_id":  e.ID,
-								"task_id":      t.ID,
-							}
-
-							// User labels
-							for _, label := range normalisedUserTaskLabelList {
-								taskLabels[label] = ""
-							}
-							for _, label := range t.Labels {
-								normalisedLabel := normaliseLabel(label.Key)
-								// Ignore labels not explicitly whitelisted by user
-								if stringInSlice(normalisedLabel, normalisedUserTaskLabelList) {
-									taskLabels[normalisedLabel] = label.Value
-								}
-							}
-
-							res = append(res, metricValue{1, getLabelValuesFromMap(taskLabels, taskLabelList)})
+	c.metrics[prometheus.NewDesc(
+		prometheus.BuildFQName("mesos", "slave", "task_labels"),
+		"Labels assigned to tasks running on slaves",
+		taskLabelList,
+		nil)] = slaveMetric{prometheus.CounterValue,
+		func(st *slaveState) []metricValue {
+			res := []metricValue{}
+			for _, f := range st.Frameworks {
+				for _, e := range f.Executors {
+					for _, t := range e.Tasks {
+						//Default labels
+						taskLabels := prometheus.Labels{
+							"source":       e.Source,
+							"framework_id": f.ID,
+							"executor_id":  e.ID,
+							"task_id":      t.ID,
+							"task_name":    t.Name,
 						}
+
+						// User labels
+						for _, label := range normalisedUserTaskLabelList {
+							taskLabels[label] = ""
+						}
+						for _, label := range t.Labels {
+							normalisedLabel := normaliseLabel(label.Key)
+							// Ignore labels not explicitly whitelisted by user
+							if stringInSlice(normalisedLabel, normalisedUserTaskLabelList) {
+								taskLabels[normalisedLabel] = label.Value
+							}
+						}
+
+						res = append(res, metricValue{1, getLabelValuesFromMap(taskLabels, taskLabelList)})
 					}
 				}
-				return res
-			},
-		}
+			}
+			return res
+		},
 	}
 
 	if len(slaveAttributeLabelList) > 0 {
