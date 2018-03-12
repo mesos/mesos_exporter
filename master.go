@@ -132,14 +132,13 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
-
 			// FIXME: Make sure those assumptions are right
 			// Every "active" node is connected to the master
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected_active").Set(active)
 			// Every "inactive" node is connected but node sending offers
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected_inactive").Set(inactive)
 			// Every "disconnected" node is "inactive"
-			c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
+			c.(*prometheus.GaugeVec).WithLabelValues("disconnected_inactive").Set(disconnected)
 			// Every "connected" node is either active or inactive
 			return nil
 		},
@@ -154,11 +153,11 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			}
 			// FIXME: Make sure those assumptions are right
 			// Every "active" framework is connected to the master
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "active").Set(active)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected_active").Set(active)
 			// Every "inactive" framework is connected but framework sending offers
-			c.(*prometheus.GaugeVec).WithLabelValues("connected", "inactive").Set(inactive)
+			c.(*prometheus.GaugeVec).WithLabelValues("connected_inactive").Set(inactive)
 			// Every "disconnected" framework is "inactive"
-			c.(*prometheus.GaugeVec).WithLabelValues("disconnected", "inactive").Set(disconnected)
+			c.(*prometheus.GaugeVec).WithLabelValues("disconnected_inactive").Set(disconnected)
 			// Every "connected" framework is either active or inactive
 			return nil
 		},
@@ -192,6 +191,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*settableCounterVec).Set(lost, "lost")
 			return nil
 		},
+
 		counter("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["master/tasks_running"]
 			staging, ok := m["master/tasks_staging"]
@@ -213,6 +213,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			frameworkToExecutorInvalid, ok := m["master/invalid_framework_to_executor_messages"]
 			executorToFrameworkValid, ok := m["master/valid_executor_to_framework_messages"]
 			executorToFrameworkInvalid, ok := m["master/invalid_executor_to_framework_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 
 			// status updates are sent from framework?(FIXME) to slave
 			// status update acks are sent from slave to framework?
@@ -288,7 +291,6 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
-
 			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
 			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
 			c.(*prometheus.GaugeVec).WithLabelValues("max").Set(max)
@@ -333,10 +335,10 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			p99, ok := m["allocator/mesos/allocation_run_latency_ms/p99"]
 			p999, ok := m["allocator/mesos/allocation_run_latency_ms/p999"]
 			p9999, ok := m["allocator/mesos/allocation_run_latency_ms/p9999"]
+
 			if !ok {
 				return errNotFoundInMap
 			}
-
 			c.(*prometheus.GaugeVec).WithLabelValues("mean").Set(mean)
 			c.(*prometheus.GaugeVec).WithLabelValues("min").Set(min)
 			c.(*prometheus.GaugeVec).WithLabelValues("max").Set(max)
