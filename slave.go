@@ -47,6 +47,26 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
 		},
+		gauge("slave", "gpus", "Current GPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
+			total, ok := m["slave/gpus_total"]
+			used, ok := m["slave/gpus_used"]
+			if !ok {
+				return errNotFoundInMap
+			}
+			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+			return nil
+		},
+		gauge("slave", "gpus_revocable", "Current revocable GPUS resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
+			total, ok := m["slave/gpus_revocable_total"]
+			used, ok := m["slave/gpus_revocable_used"]
+			if !ok {
+				return errNotFoundInMap
+			}
+			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
+			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
+			return nil
+		},
 		gauge("slave", "disk", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/disk_total"]
 			used, ok := m["slave/disk_used"]
