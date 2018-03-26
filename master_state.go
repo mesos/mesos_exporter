@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -10,11 +11,11 @@ import (
 
 type (
 	slave struct {
-		PID        string            `json:"pid"`
-		Used       resources         `json:"used_resources"`
-		Unreserved resources         `json:"unreserved_resources"`
-		Total      resources         `json:"resources"`
-		Attributes map[string]string `json:"attributes"`
+		PID        string                     `json:"pid"`
+		Used       resources                  `json:"used_resources"`
+		Unreserved resources                  `json:"unreserved_resources"`
+		Total      resources                  `json:"resources"`
+		Attributes map[string]json.RawMessage `json:"attributes"`
 	}
 
 	framework struct {
@@ -179,7 +180,9 @@ func newMasterStateCollector(httpClient *httpClient, slaveAttributeLabels []stri
 				for key, value := range s.Attributes {
 					normalisedLabel := normaliseLabel(key)
 					if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
-						slaveAttributesExport[normalisedLabel] = value
+						if attribute, err := attributeString(value); err == nil {
+							slaveAttributesExport[normalisedLabel] = attribute
+						}
 					}
 				}
 				c.(*settableCounterVec).Set(1, getLabelValuesFromMap(slaveAttributesExport, slaveAttributesLabelsExport)...)
