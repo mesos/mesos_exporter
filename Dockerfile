@@ -1,20 +1,22 @@
-FROM alpine:3.4
+FROM golang:alpine3.7
+
+WORKDIR /go/src/github.com/mesosphere/mesos_exporter
+
+COPY . .
+
+RUN go build -o /bin/mesos-exporter
+
+
+FROM alpine:3.7
+
+COPY --from=0 /bin/mesos-exporter /bin/mesos-exporter
 
 EXPOSE 9105
 
-RUN addgroup exporter \
- && adduser -S -G exporter exporter
-
-RUN apk --update add ca-certificates \
- && apk --update add --virtual build-deps go git
-
-COPY . /go/src/github.com/mesosphere/mesos_exporter
-
-RUN cd /go/src/github.com/mesosphere/mesos_exporter \
- && GOPATH=/go go get \
- && GOPATH=/go go build -o /bin/mesos-exporter \
- && apk del --purge build-deps \
- && rm -rf /go/bin /go/pkg /var/cache/apk/*
+RUN addgroup exporter &&\
+    adduser -S -G exporter exporter &&\
+    apk --update add ca-certificates &&\
+    rm -rf /var/cache/apk/*
 
 USER exporter
 
