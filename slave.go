@@ -9,6 +9,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		// CPU/Disk/Mem resources in free/used
 		gauge("slave", "cpus", "Current CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/cpus_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/cpus_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -19,6 +22,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "cpus_revocable", "Current revocable CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/cpus_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/cpus_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -29,6 +35,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "mem", "Current memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/mem_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/mem_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -39,6 +48,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "mem_revocable", "Current revocable memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/mem_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/mem_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -49,6 +61,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "gpus", "Current GPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/gpus_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/gpus_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -59,6 +74,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "gpus_revocable", "Current revocable GPUS resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/gpus_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/gpus_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -69,6 +87,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "disk", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/disk_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/disk_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -79,6 +100,9 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("slave", "disk_revocable", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["slave/disk_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["slave/disk_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -119,7 +143,13 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		// Slave stats about frameworks and executors
 		gauge("slave", "executor_state", "Current number of executors by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			registering, ok := m["slave/executors_registering"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			running, ok := m["slave/executors_running"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			terminating, ok := m["slave/executors_terminating"]
 			if !ok {
 				return errNotFoundInMap
@@ -166,9 +196,21 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		// Slave stats about tasks
 		counter("slave", "task_states_exit_total", "Total number of tasks processed by exit state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			errored, ok := m["slave/tasks_error"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			failed, ok := m["slave/tasks_failed"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			finished, ok := m["slave/tasks_finished"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			killed, ok := m["slave/tasks_killed"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			lost, ok := m["slave/tasks_lost"]
 			if !ok {
 				return errNotFoundInMap
@@ -182,7 +224,13 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		counter("slave", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["slave/tasks_running"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			staging, ok := m["slave/tasks_staging"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			starting, ok := m["slave/tasks_starting"]
 			if !ok {
 				return errNotFoundInMap
@@ -199,8 +247,17 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"type", "outcome"): func(m metricMap, c prometheus.Collector) error {
 
 			frameworkMessagesValid, ok := m["slave/valid_framework_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			frameworkMessagesInvalid, ok := m["slave/invalid_framework_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			statusUpdateValid, ok := m["slave/valid_status_updates"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			statusUpdateInvalid, ok := m["slave/invalid_status_updates"]
 			if !ok {
 				return errNotFoundInMap

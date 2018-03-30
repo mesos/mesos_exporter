@@ -13,6 +13,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// CPU/Disk/Mem resources in free/used
 		gauge("master", "cpus", "Current CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/cpus_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/cpus_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -23,6 +26,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "cpus_revocable", "Current revocable CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/cpus_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/cpus_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -33,6 +39,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "mem", "Current memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/mem_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/mem_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -43,6 +52,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "mem_revocable", "Current revocable memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/mem_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/mem_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -53,6 +65,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "disk", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/disk_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/disk_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -63,6 +78,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "disk_revocable", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["master/disk_revocable_total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			used, ok := m["master/disk_revocable_used"]
 			if !ok {
 				return errNotFoundInMap
@@ -102,6 +120,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// Master stats about agents
 		counter("master", "slave_registration_events_total", "Total number of registration events on this master since it booted.", "event"): func(m metricMap, c prometheus.Collector) error {
 			registrations, ok := m["master/slave_registrations"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			reregistrations, ok := m["master/slave_reregistrations"]
 			if !ok {
 				return errNotFoundInMap
@@ -113,8 +134,17 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		counter("master", "slave_removal_events_total", "Total number of removal events on this master since it booted.", "event"): func(m metricMap, c prometheus.Collector) error {
 			scheduled, ok := m["master/slave_shutdowns_scheduled"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			canceled, ok := m["master/slave_shutdowns_canceled"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			completed, ok := m["master/slave_shutdowns_completed"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			removals, ok := m["master/slave_removals"]
 			if !ok {
 				return errNotFoundInMap
@@ -127,7 +157,13 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 		gauge("master", "slaves_state", "Current number of slaves known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["master/slaves_active"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			inactive, ok := m["master/slaves_inactive"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			disconnected, ok := m["master/slaves_disconnected"]
 			if !ok {
 				return errNotFoundInMap
@@ -146,7 +182,13 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// Master stats about frameworks
 		gauge("master", "frameworks_state", "Current number of frames known to the master per connection and registration state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["master/frameworks_active"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			inactive, ok := m["master/frameworks_inactive"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			disconnected, ok := m["master/frameworks_disconnected"]
 			if !ok {
 				return errNotFoundInMap
@@ -177,9 +219,21 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// Master stats about tasks
 		counter("master", "task_states_exit_total", "Total number of tasks processed by exit state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			errored, ok := m["master/tasks_error"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			failed, ok := m["master/tasks_failed"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			finished, ok := m["master/tasks_finished"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			killed, ok := m["master/tasks_killed"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			lost, ok := m["master/tasks_lost"]
 			if !ok {
 				return errNotFoundInMap
@@ -194,7 +248,13 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		counter("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["master/tasks_running"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			staging, ok := m["master/tasks_staging"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			starting, ok := m["master/tasks_starting"]
 			if !ok {
 				return errNotFoundInMap
@@ -210,8 +270,17 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of messages by outcome of operation and direction.",
 			"source", "destination", "type", "outcome"): func(m metricMap, c prometheus.Collector) error {
 			frameworkToExecutorValid, ok := m["master/valid_framework_to_executor_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			frameworkToExecutorInvalid, ok := m["master/invalid_framework_to_executor_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			executorToFrameworkValid, ok := m["master/valid_executor_to_framework_messages"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			executorToFrameworkInvalid, ok := m["master/invalid_executor_to_framework_messages"]
 			if !ok {
 				return errNotFoundInMap
@@ -220,8 +289,17 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			// status updates are sent from framework?(FIXME) to slave
 			// status update acks are sent from slave to framework?
 			statusUpdateAckValid, ok := m["master/valid_status_update_acknowledgements"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			statusUpdateAckInvalid, ok := m["master/invalid_status_update_acknowledgements"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			statusUpdateValid, ok := m["master/valid_status_updates"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			statusUpdateInvalid, ok := m["master/invalid_status_updates"]
 			if !ok {
 				return errNotFoundInMap
@@ -254,7 +332,13 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// Master stats about events
 		gauge("master", "event_queue_length", "Current number of elements in event queue by type", "type"): func(m metricMap, c prometheus.Collector) error {
 			dispatches, ok := m["master/event_queue_dispatches"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			httpRequests, ok := m["master/event_queue_http_requests"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			messages, ok := m["master/event_queue_messages"]
 			if !ok {
 				return errNotFoundInMap
@@ -280,13 +364,37 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		gauge("master", "allocation_run_ms", "Time spent in allocation algorithm in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
 			mean, ok := m["allocator/mesos/allocation_run_ms"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			min, ok := m["allocator/mesos/allocation_run_ms/min"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			max, ok := m["allocator/mesos/allocation_run_ms/max"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p50, ok := m["allocator/mesos/allocation_run_ms/p50"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p90, ok := m["allocator/mesos/allocation_run_ms/p90"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p95, ok := m["allocator/mesos/allocation_run_ms/p95"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p99, ok := m["allocator/mesos/allocation_run_ms/p99"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p999, ok := m["allocator/mesos/allocation_run_ms/p999"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p9999, ok := m["allocator/mesos/allocation_run_ms/p9999"]
 			if !ok {
 				return errNotFoundInMap
@@ -327,15 +435,38 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		gauge("master", "allocation_run_latency_ms", "Allocation batch latency in ms.", "type"): func(m metricMap, c prometheus.Collector) error {
 			mean, ok := m["allocator/mesos/allocation_run_latency_ms"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			min, ok := m["allocator/mesos/allocation_run_latency_ms/min"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			max, ok := m["allocator/mesos/allocation_run_latency_ms/max"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p50, ok := m["allocator/mesos/allocation_run_latency_ms/p50"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p90, ok := m["allocator/mesos/allocation_run_latency_ms/p90"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p95, ok := m["allocator/mesos/allocation_run_latency_ms/p95"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p99, ok := m["allocator/mesos/allocation_run_latency_ms/p99"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p999, ok := m["allocator/mesos/allocation_run_latency_ms/p999"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			p9999, ok := m["allocator/mesos/allocation_run_latency_ms/p9999"]
-
 			if !ok {
 				return errNotFoundInMap
 			}
@@ -414,6 +545,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		gauge("master", "allocator_resources_cpus", "Number of CPUs offered or allocated", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["allocator/mesos/resources/cpus/total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			offeredOrAllocated, ok := m["allocator/mesos/resources/cpus/offered_or_allocated"]
 			if !ok {
 				return errNotFoundInMap
@@ -426,6 +560,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		gauge("master", "allocator_resources_disk", "Allocated or offered disk space in MB", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["allocator/mesos/resources/disk/total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			offeredOrAllocated, ok := m["allocator/mesos/resources/disk/offered_or_allocated"]
 			if !ok {
 				return errNotFoundInMap
@@ -438,6 +575,9 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		gauge("master", "allocator_resources_mem", "Allocated or offered memory in MB", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["allocator/mesos/resources/mem/total"]
+			if !ok {
+				return errNotFoundInMap
+			}
 			offeredOrAllocated, ok := m["allocator/mesos/resources/mem/offered_or_allocated"]
 			if !ok {
 				return errNotFoundInMap
