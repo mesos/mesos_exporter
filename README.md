@@ -21,15 +21,27 @@ Usage of mesos_exporter:
   -slave string
         Expose metrics from slave running on this URL
   -timeout duration
-        Master polling timeout (default 10s)
+        Master polling timeout (default 5s)
+  -username string
+        Username to use for HTTP or strict mode authentication
+  -password string
+        Password to use for HTTP or strict mode authentication
+  -loginURL
+        URL for strict mode authentication (default https://leader.mesos/acs/api/v1/auth/login).
   -trustedCerts string
-        Comma-separated list of certificates (.pem files) trusted for requests to
-        Mesos endpoints
+        Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints
+  -strictMode
+        Enable strict mode API authentication
+  -privateKey
+        Private key used for strict mode authentication. This must be provided
+        when using strict mode. However, it can be read from the environment if the secret store is used. 
+  -skipSSLVerify
+        Disable SSL certificate verification
 ```
-When using HTTP authentication, the following values are read from the environment:
-
+When using HTTP or strict mode authentication, the following values are read from the environment, if they are not specified at run time:
 - `MESOS_EXPORTER_USERNAME`
 - `MESOS_EXPORTER_PASSWORD`
+- `MESOS_EXPORTER_PRIVATE_KEY`
 
 
 ## Prometheus Configuration

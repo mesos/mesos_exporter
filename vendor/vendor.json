@@ -9,6 +9,12 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
+			"checksumSHA1": "GXOurDGgsLmJs0wounpdWZZRSGw=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "a539ee1a749a2b895533f979515ac7e6e0f5b650",
+			"revisionTime": "2017-06-08T00:51:49Z"
+		},
+		{
 			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "5afd06f9d81a86d6e3bb7dc702d6bd148ea3ff23",
