@@ -6,13 +6,15 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type (
 	slaveState struct {
-		Attributes map[string]string `json:"attributes"`
-		Frameworks []slaveFramework  `json:"frameworks"`
+		Attributes map[string]json.RawMessage `json:"attributes"`
+		Frameworks []slaveFramework           `json:"frameworks"`
 	}
 	slaveFramework struct {
 		ID        string               `json:"ID"`
@@ -102,7 +104,9 @@ func newSlaveStateCollector(httpClient *httpClient, userTaskLabelList []string, 
 				for key, value := range st.Attributes {
 					normalisedLabel := normaliseLabel(key)
 					if stringInSlice(normalisedLabel, normalisedAttributeLabels) {
-						slaveAttributes[normalisedLabel] = value
+						if attribute, err := attributeString(value); err == nil {
+							slaveAttributes[normalisedLabel] = attribute
+						}
 					}
 				}
 

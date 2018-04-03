@@ -319,3 +319,19 @@ func getLabelValuesFromMap(labels prometheus.Labels, orderedLabelKeys []string) 
 	}
 	return labelValues
 }
+
+var (
+	text             = regexp.MustCompile("^[-[:word:]/.]*$")
+	errDropAttribute = errors.New("Value neither scalar nor text")
+)
+
+// attributeString converts a text attribute in json.RawMessage to string.
+// see http://mesos.apache.org/documentation/latest/attributes-resources/
+// for more information.  note that scalar matches text for this purpose.
+// attributeString returns string or errDropAttribute.
+func attributeString(attribute json.RawMessage) (string, error) {
+	if value := strings.Trim(string(attribute), `"`); text.MatchString(value) {
+		return value, nil
+	}
+	return "", errDropAttribute
+}
