@@ -20,6 +20,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
@@ -33,6 +34,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
@@ -46,6 +48,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
@@ -59,6 +62,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
@@ -72,6 +76,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
@@ -85,6 +90,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				return errNotFoundInMap
 			}
+			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("free").Set(total - used)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
 			return nil
