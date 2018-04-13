@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
@@ -13,15 +14,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "cpus", "Current CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/cpus_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/cpus_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/cpus_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -32,15 +33,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "cpus_revocable", "Current revocable CPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/cpus_revocable_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_revocable_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/cpus_revocable_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_revocable_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/cpus_revocable_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/cpus_revocable_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -51,15 +52,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "mem", "Current memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/mem_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/mem_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/mem_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -70,15 +71,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "mem_revocable", "Current revocable memory resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/mem_revocable_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_revocable_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/mem_revocable_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_revocable_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/mem_revocable_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/mem_revocable_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -89,15 +90,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "gpus", "Current GPU resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/gpus_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/gpus_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/gpus_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -108,15 +109,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "gpus_revocable", "Current revocable GPUS resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/gpus_revocable_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_revocable_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/gpus_revocable_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_revocable_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/gpus_revocable_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/gpus_revocable_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -127,15 +128,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "disk", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/disk_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/disk_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/disk_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -146,15 +147,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "disk_revocable", "Current disk resources in cluster.", "type"): func(m metricMap, c prometheus.Collector) error {
 			percent, ok := m["slave/disk_revocable_percent"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_revocable_percent").Error(LogErrNotFoundInMap)
 			}
 			total, ok := m["slave/disk_revocable_total"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_revocable_total").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["slave/disk_revocable_used"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/disk_revocable_used").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("percent").Set(percent)
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
@@ -172,7 +173,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			registered, ok := m["slave/registered"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/registered").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(registered)
 			return nil
@@ -185,7 +186,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			uptime, ok := m["slave/uptime_secs"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/uptime_seconds").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(uptime)
 			return nil
@@ -195,7 +196,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of recovery errors"): func(m metricMap, c prometheus.Collector) error {
 			errors, ok := m["slave/recovery_errors"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/recovery_errors").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(errors)
 			return nil
@@ -208,7 +209,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			age, ok := m["slave/recovery_time_secs"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/recovery_time_secs").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(age)
 			return nil
@@ -221,7 +222,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			age, ok := m["slave/executor_directory_max_allowed_age_secs"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executor_directory_max_allowed_age_secs").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(age)
 			return nil
@@ -231,15 +232,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "executor_state", "Current number of executors by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			registering, ok := m["slave/executors_registering"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executors_registering").Error(LogErrNotFoundInMap)
 			}
 			running, ok := m["slave/executors_running"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executors_running").Error(LogErrNotFoundInMap)
 			}
 			terminating, ok := m["slave/executors_terminating"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executors_terminating").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("registering").Set(registering)
 			c.(*prometheus.GaugeVec).WithLabelValues("running").Set(running)
@@ -254,7 +255,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			active, ok := m["slave/frameworks_active"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/frameworks_active").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(active)
 			return nil
@@ -264,7 +265,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of executor terminations."): func(m metricMap, c prometheus.Collector) error {
 			terminated, ok := m["slave/executors_terminated"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executors_terminated").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(terminated)
 			return nil
@@ -274,7 +275,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of executor preemptions."): func(m metricMap, c prometheus.Collector) error {
 			preempted, ok := m["slave/executors_preempted"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/executors_preempted").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(preempted)
 			return nil
@@ -284,31 +285,31 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		counter("slave", "task_states_exit_total", "Total number of tasks processed by exit state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			errored, ok := m["slave/tasks_error"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_error").Error(LogErrNotFoundInMap)
 			}
 			failed, ok := m["slave/tasks_failed"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_failed").Error(LogErrNotFoundInMap)
 			}
 			finished, ok := m["slave/tasks_finished"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_finished").Error(LogErrNotFoundInMap)
 			}
 			gone, ok := m["slave/tasks_gone"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_gone").Error(LogErrNotFoundInMap)
 			}
 			killed, ok := m["slave/tasks_killed"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_killed").Error(LogErrNotFoundInMap)
 			}
 			killing, ok := m["slave/tasks_killing"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_killing").Error(LogErrNotFoundInMap)
 			}
 			lost, ok := m["slave/tasks_lost"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_lost").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounterVec).Set(errored, "errored")
 			c.(*settableCounterVec).Set(failed, "failed")
@@ -322,15 +323,15 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		counter("slave", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["slave/tasks_running"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_running").Error(LogErrNotFoundInMap)
 			}
 			staging, ok := m["slave/tasks_staging"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_staging").Error(LogErrNotFoundInMap)
 			}
 			starting, ok := m["slave/tasks_starting"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/tasks_starting").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounterVec).Set(running, "running")
 			c.(*settableCounterVec).Set(staging, "staging")
@@ -341,7 +342,12 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		counter("slave", "task_state_counts_by_source_reason", "Number of task states by source and reason", "state", "source", "reason"): func(m metricMap, c prometheus.Collector) error {
 			re, err := regexp.Compile("slave/task_(.*?)/source_(.*?)/reason_(.*?)$")
 			if err != nil {
-				return fmt.Errorf("could not compile task_state_counts regex: %s", err)
+				log.WithFields(log.Fields{
+					"regex":  "slave/task_(.*?)/source_(.*?)/reason_(.*?)$",
+					"metric": "slave_task_state_counts_by_source_reason",
+					"error":  err,
+				}).Error("could not compile regex")
+				return fmt.Errorf("could not compile slave_task_state_counts_by_source_reason regex: %s", err)
 			}
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
@@ -363,19 +369,19 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 
 			frameworkMessagesValid, ok := m["slave/valid_framework_messages"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/valid_framework_messages").Error(LogErrNotFoundInMap)
 			}
 			frameworkMessagesInvalid, ok := m["slave/invalid_framework_messages"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/invalid_framework_messages").Error(LogErrNotFoundInMap)
 			}
 			statusUpdateValid, ok := m["slave/valid_status_updates"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/valid_status_updates").Error(LogErrNotFoundInMap)
 			}
 			statusUpdateInvalid, ok := m["slave/invalid_status_updates"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/invalid_status_updates").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounterVec).Set(frameworkMessagesValid, "framework", "valid")
 			c.(*settableCounterVec).Set(frameworkMessagesInvalid, "framework", "invalid")
@@ -394,7 +400,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		}): func(m metricMap, c prometheus.Collector) error {
 			pending, ok := m["gc/path_removals_pending"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "gc/path_removals_pending").Error(LogErrNotFoundInMap)
 			}
 			c.(prometheus.Gauge).Set(pending)
 			return nil
@@ -405,11 +411,11 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 
 			succeeded, ok := m["gc/path_removals_succeeded"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "gc/path_removals_succeeded").Error(LogErrNotFoundInMap)
 			}
 			failed, ok := m["gc/path_removals_failed"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "gc/path_removals_failed").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounterVec).Set(succeeded, "success")
 			c.(*settableCounterVec).Set(failed, "failed")
@@ -423,7 +429,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Total number of container launch errors"): func(m metricMap, c prometheus.Collector) error {
 			errors, ok := m["slave/container_launch_errors"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "slave/container_launch_errors").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(errors)
 			return nil
@@ -433,7 +439,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Number of containers changing root filesystem"): func(m metricMap, c prometheus.Collector) error {
 			newRootfs, ok := m["containerizer/mesos/filesystem/containers_new_rootfs"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/mesos/filesystem/containers_new_rootfs").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(newRootfs)
 			return nil
@@ -443,7 +449,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Number of errors from the containerizer attempting to bind the rootfs"): func(m metricMap, c prometheus.Collector) error {
 			errors, ok := m["containerizer/mesos/provisioner/bind/remove_rootfs_errors"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/mesos/provisioner/bind/remove_rootfs_errors").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(errors)
 			return nil
@@ -453,7 +459,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Number of errors from the containerizer attempting to remove a container"): func(m metricMap, c prometheus.Collector) error {
 			errors, ok := m["containerizer/mesos/provisioner/remove_container_errors"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/mesos/provisioner/remove_container_errors").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(errors)
 			return nil
@@ -463,7 +469,7 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			"Number of containers destroyed due to launch errors"): func(m metricMap, c prometheus.Collector) error {
 			errors, ok := m["containerizer/mesos/container_destroy_errors"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/mesos/container_destroy_errors").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounter).Set(errors)
 			return nil
@@ -474,11 +480,11 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 
 			succeeded, ok := m["containerizer/fetcher/task_fetches_succeeded"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/fetcher/task_fetches_succeeded").Error(LogErrNotFoundInMap)
 			}
 			failed, ok := m["containerizer/fetcher/task_fetches_failed"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/fetcher/task_fetches_failed").Error(LogErrNotFoundInMap)
 			}
 			c.(*settableCounterVec).Set(succeeded, "success")
 			c.(*settableCounterVec).Set(failed, "failed")
@@ -488,11 +494,11 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 		gauge("slave", "containerizer_fetcher_cache_size", "Containerizer fetcher cache sizes in bytes", "type"): func(m metricMap, c prometheus.Collector) error {
 			total, ok := m["containerizer/fetcher/cache_size_total_bytes"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/fetcher/cache_size_total_bytes").Error(LogErrNotFoundInMap)
 			}
 			used, ok := m["containerizer/fetcher/cache_size_used_bytes"]
 			if !ok {
-				return errNotFoundInMap
+				log.WithField("metric", "containerizer/fetcher/cache_size_used_bytes").Error(LogErrNotFoundInMap)
 			}
 			c.(*prometheus.GaugeVec).WithLabelValues("total").Set(total)
 			c.(*prometheus.GaugeVec).WithLabelValues("used").Set(used)
