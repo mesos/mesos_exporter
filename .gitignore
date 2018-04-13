@@ -1,3 +1,5 @@
 mesos_exporter
 .tarballs
 .build
+
+*.sw[op]
