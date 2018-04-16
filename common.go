@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 type (
@@ -64,9 +64,7 @@ type (
 
 type metricMap map[string]float64
 
-var (
-	errNotFoundInMap = errors.New("Couldn't find key in map")
-)
+const LogErrNotFoundInMap = "Couldn't find key in map"
 
 type settableCounterVec struct {
 	desc   *prometheus.Desc
@@ -96,14 +94,14 @@ type settableCounter struct {
 
 func (c *settableCounter) Describe(ch chan<- *prometheus.Desc) {
 	if c.desc == nil {
-		log.Printf("NIL description: %v", c)
+		log.WithField("counter", c).Warn("NIL description")
 	}
 	ch <- c.desc
 }
 
 func (c *settableCounter) Collect(ch chan<- prometheus.Metric) {
 	if c.value == nil {
-		log.Printf("NIL value: %v", c)
+		log.WithField("counter", c).Warn("NIL value")
 	}
 	ch <- c.value
 }
@@ -176,7 +174,7 @@ func newMetricCollector(httpClient *httpClient, metrics map[prometheus.Collector
 func signingToken(httpClient *httpClient) string {
 	signKey, err := jwt.ParseRSAPrivateKeyFromPEM(httpClient.auth.signingKey)
 	if err != nil {
-		log.Printf("Error parsing privateKey: %s", err)
+		log.WithField("error", err).Error("Error parsing privateKey")
 	}
 
 	expireToken := time.Now().Add(time.Hour * 1).Unix()
@@ -187,10 +185,14 @@ func signingToken(httpClient *httpClient) string {
 		"uid": httpClient.auth.username,
 		"exp": expireToken,
 	})
+	log.WithFields(log.Fields{
+		"uid":     httpClient.auth.username,
+		"expires": expireToken,
+	}).Debug("creating token")
 	// Sign and get the complete encoded token as a string
 	tokenString, err := token.SignedString(signKey)
 	if err != nil {
-		log.Printf("Error creating login token: %s", err)
+		log.WithField("error", err).Error("Error creating login token")
 		return ""
 	}
 	return tokenString
@@ -203,19 +205,25 @@ func authToken(httpClient *httpClient) string {
 		signingToken := signingToken(httpClient)
 		body, err := json.Marshal(&tokenRequest{UID: httpClient.auth.username, Token: signingToken})
 		if err != nil {
-			log.Printf("Error creating JSON request: %s", err)
+			log.WithField("error", err).Error("Error creating JSON request")
 			return ""
 		}
 		buffer := bytes.NewBuffer(body)
 		req, err := http.NewRequest("POST", url, buffer)
 		if err != nil {
-			log.Printf("Error creating HTTP request to %s: %s", url, err)
+			log.WithFields(log.Fields{
+				"url":   url,
+				"error": err,
+			}).Error("Error creating HTTP request")
 			return ""
 		}
 		req.Header.Add("Content-Type", "application/json")
 		res, err := httpClient.Do(req)
 		if err != nil {
-			log.Printf("Error fetching %s: %s", url, err)
+			log.WithFields(log.Fields{
+				"url":   url,
+				"error": err,
+			}).Error("Error fetching URL")
 			errorCounter.Inc()
 			return ""
 		}
@@ -223,7 +231,10 @@ func authToken(httpClient *httpClient) string {
 
 		var token tokenResponse
 		if err := json.NewDecoder(res.Body).Decode(&token); err != nil {
-			log.Printf("Error decoding response body from %s: %s", url, err)
+			log.WithFields(log.Fields{
+				"url":   url,
+				"error": err,
+			}).Error("Error decoding response body")
 			errorCounter.Inc()
 			return ""
 		}
@@ -237,7 +248,10 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 	url := strings.TrimSuffix(httpClient.url, "/") + endpoint
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("Error creating HTTP request to %s: %s", url, err)
+		log.WithFields(log.Fields{
+			"url":   url,
+			"error": err,
+		}).Error("Error creating HTTP request")
 		return false
 	}
 	if httpClient.auth.username != "" && httpClient.auth.password != "" {
@@ -246,16 +260,23 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 	if httpClient.auth.strictMode {
 		req.Header.Add("Authorization", authToken(httpClient))
 	}
+	log.WithField("url", url).Debug("fetching URL")
 	res, err := httpClient.Do(req)
 	if err != nil {
-		log.Printf("Error fetching %s: %s", url, err)
+		log.WithFields(log.Fields{
+			"url":   url,
+			"error": err,
+		}).Error("Error fetching URL")
 		errorCounter.Inc()
 		return false
 	}
 	defer res.Body.Close()
 
 	if err := json.NewDecoder(res.Body).Decode(&target); err != nil {
-		log.Printf("Error decoding response body from %s: %s", url, err)
+		log.WithFields(log.Fields{
+			"url":   url,
+			"error": err,
+		}).Error("Error decoding response body")
 		errorCounter.Inc()
 		return false
 	}
@@ -265,16 +286,15 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 
 func (c *metricCollector) Collect(ch chan<- prometheus.Metric) {
 	var m metricMap
+	log.WithField("url", "/metrics/snapshot").Debug("fetching URL")
 	c.fetchAndDecode("/metrics/snapshot", &m)
 	for cm, f := range c.metrics {
 		if err := f(m, cm); err != nil {
-			if err == errNotFoundInMap {
-				ch := make(chan *prometheus.Desc, 1)
-				cm.Describe(ch)
-				log.Printf("Couldn't find fields required to update %s\n", <-ch)
-			} else {
-				log.Printf("Error extracting metric: %s", err)
-			}
+			ch := make(chan *prometheus.Desc, 1)
+			log.WithFields(log.Fields{
+				"metric": <-ch,
+				"error":  err,
+			}).Error("Error extracting metric")
 			errorCounter.Inc()
 			continue
 		}
