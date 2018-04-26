@@ -425,7 +425,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if err != nil {
 				log.WithFields(log.Fields{
 					"regex":  "master/task_(.*?)/source_(.*?)/reason_(.*?)$",
-					"metric": "master_ task_state_counts_by_source_reason",
+					"metric": "master_task_state_counts_by_source_reason",
 					"error":  err,
 				}).Error("could not compile regex")
 				return fmt.Errorf("could not compile task_state_counts regex: %s", err)
