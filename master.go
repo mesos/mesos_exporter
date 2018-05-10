@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -919,7 +920,193 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			return nil
 		},
 
-		// Frameworks metrics
+		// Framework call counts
+		counter("master", "frameworks_calls", "Counts of calls per framework", "framework_id", "call"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/calls/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				call := matches[2]
+				c.(*settableCounterVec).Set(value, id, call)
+			}
+			return nil
+		},
+
+		// Framework accept operation counts
+		counter("master", "frameworks_operations", "Counts of accept operations per framework", "framework_id", "operation"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/operations/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				op := matches[2]
+				c.(*settableCounterVec).Set(value, id, op)
+			}
+			return nil
+		},
+
+		// Framework subscribed
+		gauge("master", "frameworks_subscribed", "Boolean: is this framework subscribed?", "framework_id"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/subscribed")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 2 {
+					continue
+				}
+				id := matches[1]
+				c.(*settableCounterVec).Set(value, id)
+			}
+			return nil
+		},
+
+		// Framework role state
+		gauge("master", "frameworks_suppressed", "Boolean: are offers in this role suppressed?", "framework_id", "role"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/(.*?)/suppressed")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				role := matches[2]
+				c.(*settableCounterVec).Set(value, id, role)
+			}
+			return nil
+		},
+
+		// Framework events
+		counter("master", "frameworks_events", "Total number of events sent per framework", "framework_id", "event"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/events/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				event := matches[2]
+				c.(*settableCounterVec).Set(value, id, event)
+			}
+			return nil
+		},
+
+		// Framework task active states
+		gauge("master", "frameworks_task_states", "Active task states per framework", "framework_id", "state"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/tasks/task_(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				state := matches[2]
+
+				if !strings.HasSuffix(state, "ing") {
+					continue
+				}
+				c.(*settableCounterVec).Set(value, id, state)
+			}
+			return nil
+		},
+
+		// Framework task terminal states
+		counter("master", "frameworks_task_states_terminal", "Terminal task states per framework", "framework_id", "state"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/tasks/task_(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				state := matches[2]
+
+				if strings.HasSuffix(state, "ing") {
+					continue
+				}
+				c.(*settableCounterVec).Set(value, id, state)
+			}
+			return nil
+		},
+
+		// Framework offers
+		counter("master", "frameworks_offers", "Number of offers by type per framework", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/offers/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				typ := matches[2]
+				c.(*settableCounterVec).Set(value, id, typ)
+			}
+			return nil
+		},
+
+		// Per-framework resource allocation: offer filters
+		gauge("master", "frameworks_offer_filters", "Number of filters received per framework over period", "framework_id", "period"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/offer_filters/refuse_seconds/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				pd := matches[2]
+				c.(*settableCounterVec).Set(value, id, pd)
+			}
+			return nil
+		},
+
+		gauge("master", "frameworks_resource_filters", "Number of times resources were filtered per reason", "framework_id", "reason"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/resources_filtered/(.*?)")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				why := matches[2]
+				c.(*settableCounterVec).Set(value, id, why)
+			}
+			return nil
+		},
+
+		// Per-role resource allocation (min)
+		gauge("master", "frameworks_role_resource_allocation_min", "Number of times resources were filtered per role", "framework_id", "role"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/roles/(.*)/latest_position/min")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				role := matches[2]
+				c.(*settableCounterVec).Set(value, id, role)
+			}
+			return nil
+		},
+
+		// Per-role resource allocation (max)
+		gauge("master", "frameworks_role_resource_allocation_max", "Number of times resources were filtered per role", "framework_id", "role"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile("master/frameworks/(.*?)/roles/(.*)/latest_position/max")
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 3 {
+					continue
+				}
+				id := matches[1]
+				role := matches[2]
+				c.(*settableCounterVec).Set(value, id, role)
+			}
+			return nil
+		},
+
+		// Framework message metrics
 		counter("master", "frameworks_messages", "Messages passed around with the frameworks", "framework", "type"): func(m metricMap, c prometheus.Collector) error {
 			re, err := regexp.Compile("frameworks/(.*?)/messages_(.*?)$")
 			if err != nil {
