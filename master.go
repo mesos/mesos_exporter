@@ -1098,7 +1098,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		},
 
 		// Framework task failures by source reason
-		counter("master", "framework_task_states", "Framework task failures by source reason", "framework_name", "framework_id", "source", "reason"): func(m metricMap, c prometheus.Collector) error {
+		counter("master", "framework_task_failures", "Framework task failures by source reason", "framework_name", "framework_id", "source", "reason"): func(m metricMap, c prometheus.Collector) error {
 			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/task_failed/([^/]+)/([^/]+)`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
