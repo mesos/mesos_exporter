@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -1085,7 +1084,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
-				notmatches := re.FindStringSubmatch(metric)
+				notmatches := notre.FindStringSubmatch(metric)
 				if len(matches) != 4 || len(notmatches) == 4 {
 					continue
 				}
@@ -1127,7 +1126,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 				name := matches[1]
 				id := matches[2]
 				typ := matches[3]
-				c.(*settableCounterVec).Set(value, id, typ)
+				c.(*settableCounterVec).Set(value, name, id, typ)
 			}
 			return nil
 		},
@@ -1143,7 +1142,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 				name := matches[1]
 				id := matches[2]
 				pd := matches[3]
-				c.(*prometheus.settableCounterVec).Set(value, name, id, pd)
+				c.(*settableCounterVec).Set(value, name, id, pd)
 			}
 			return nil
 		},
@@ -1159,7 +1158,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 				name := matches[1]
 				id := matches[2]
 				reason := matches[3]
-				c.(*prometheus.settableCounterVec).Set(value, name, id, reason)
+				c.(*settableCounterVec).Set(value, name, id, reason)
 			}
 			return nil
 		},
