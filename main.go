@@ -185,8 +185,14 @@ func main() {
 
 	switch {
 	case *masterURL != "":
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Fatal("Unable to get the hostname of this machine")
+		}
 		for _, f := range []func(*httpClient) prometheus.Collector{
-			newMasterCollector,
+			func(c *httpClient) prometheus.Collector {
+				return newMasterCollector(c, hostname)
+			},
 			func(c *httpClient) prometheus.Collector {
 				return newMasterStateCollector(c, slaveAttributeLabels)
 			},
