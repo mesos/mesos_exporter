@@ -1064,7 +1064,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/([^/]+ing|task_lost)`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
-				if len(matches) != 3 {
+				if len(matches) != 4 {
 					continue
 				}
 				name := matches[1]
