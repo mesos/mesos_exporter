@@ -921,7 +921,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework call counts (total)
 		counter("master", "framework_calls_total", "Counts of API calls per framework", "framework_name", "framework_id"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/calls`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/calls$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 3 {
@@ -936,7 +936,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework call counts (by type)
 		counter("master", "framework_calls", "Counts of API calls per framework", "framework_name", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/calls/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/calls/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -952,7 +952,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework offer operation counts (total)
 		counter("master", "framework_operations_total", "Counts of offer operations per framework", "framework_name", "framework_id"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/operations`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/operations$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 3 {
@@ -967,7 +967,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework offer operation counts (by type)
 		counter("master", "framework_operations", "Counts of offer operations per framework", "framework_name", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/operations/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/operations/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -983,7 +983,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework subscribed
 		gauge("master", "framework_subscribed", "Boolean: is this framework subscribed?", "framework_name", "framework_id"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/subscribed`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/subscribed$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 2 {
@@ -998,7 +998,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework role state
 		gauge("master", "framework_suppressed", "Boolean: are offers for this role suppressed?", "framework_name", "framework_id", "role"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/roles/([^/]+)/suppressed`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/roles/([^/]+)/suppressed$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1014,7 +1014,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework events (total)
 		counter("master", "framework_events_total", "Counts of events per framework", "framework_name", "framework_id"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 3 {
@@ -1029,7 +1029,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework events (by type)
 		counter("master", "framework_events", "Counts of events per framework", "framework_name", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events/([^/]+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events/([^/]+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1045,7 +1045,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework update events (by state)
 		counter("master", "framework_update_events", "Counts of update events per framework", "framework_name", "framework_id", "state"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events/update/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/events/update/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1079,8 +1079,8 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 		// Framework terminal task states
 		counter("master", "framework_terminal_task_states", "Terminal task states per framework", "framework_name", "framework_id", "state"): func(m metricMap, c prometheus.Collector) error {
 			// TODO: don't use two regexes here
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/([^/]+)`)
-			notre, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/([^/]+ing|task_lost)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/([^/]+)$`)
+			notre, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/([^/]+ing|task_lost)$`)
 
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
@@ -1099,7 +1099,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework task failures by source reason
 		counter("master", "framework_task_failures", "Framework task failures by source reason", "framework_name", "framework_id", "source", "reason"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/task_failed/([^/]+)/([^/]+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/tasks/task_failed/([^/]+)/([^/]+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 5 {
@@ -1117,7 +1117,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework offers
 		counter("master", "framework_offers", "Number of offers by type per framework", "framework_name", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/offers/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/offers/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1133,7 +1133,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Per-framework resource allocation: offer filters
 		counter("master", "framework_offer_filters", "Number of filters set per framework over period", "framework_name", "framework_id", "period"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/offer_filters/refused_seconds/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/offer_filters/refused_seconds/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1149,7 +1149,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Per-framework resource filters
 		counter("master", "framework_resource_filters", "Number of times resources were filtered per framework", "framework_name", "framework_id", "reason"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/resources_filtered/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/resources_filtered/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1165,7 +1165,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Latest per-role DRF position
 		gauge("master", "frameworks_drf_position", "Latest per-role DRF position", "framework_name", "framework_id", "role", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/roles/([^/]+)/latest_position/(.+)`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/roles/([^/]+)/latest_position/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 5 {
