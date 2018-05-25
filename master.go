@@ -1133,7 +1133,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Per-framework resource allocation: offer filters
 		counter("master", "framework_offer_filters", "Number of filters set per framework over period", "framework_name", "framework_id", "period"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/offer_filters/refused_seconds/(.+)$`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/allocation/offer_filters/refuse_seconds/(.+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
