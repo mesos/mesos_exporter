@@ -1117,7 +1117,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 
 		// Framework offers
 		counter("master", "framework_offers", "Number of offers by type per framework", "framework_name", "framework_id", "type"): func(m metricMap, c prometheus.Collector) error {
-			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/offers/(.+)$`)
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/offers/([^/]+)$`)
 			for metric, value := range m {
 				matches := re.FindStringSubmatch(metric)
 				if len(matches) != 4 {
@@ -1127,6 +1127,23 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 				id := matches[2]
 				typ := matches[3]
 				c.(*settableCounterVec).Set(value, name, id, typ)
+			}
+			return nil
+		},
+
+		// Framework resource-specific offer counts
+		counter("master", "framework_offers_sent", "Number of offers by type by resource per framework", "framework_name", "framework_id", "type", "resource"): func(m metricMap, c prometheus.Collector) error {
+			re, _ := regexp.Compile(`master/frameworks/([^.]*)\.([^/]+)/offers/(.+)/sent/with_(.+)$`)
+			for metric, value := range m {
+				matches := re.FindStringSubmatch(metric)
+				if len(matches) != 5 {
+					continue
+				}
+				name := matches[1]
+				id := matches[2]
+				typ := matches[3]
+				res := matches[4]
+				c.(*settableCounterVec).Set(value, name, id, typ, res)
 			}
 			return nil
 		},
