@@ -16,37 +16,67 @@ Usage of mesos_exporter:
         Path to Mesos client TLS certificate (.pem file)
   -clientKey string
         Path to Mesos client TLS key file (.pem file)
+  -enableMasterState
+        Enable collection from the master's /state endpoint (default true)
   -exportedSlaveAttributes string
         Comma-separated list of slave attributes to include in the corresponding metric
   -exportedTaskLabels string
         Comma-separated list of task labels to include in the corresponding metric
+  -logLevel string
+        Log level (default "error")
+  -loginURL string
+        URL for strict mode authentication (default "https://leader.mesos/acs/api/v1/auth/login")
   -master string
         Expose metrics from master running on this URL
+  -password string
+        Password for authentication
+  -privateKey string
+        File path to certificate for strict mode authentication
+  -skipSSLVerify
+        Skip SSL certificate verification
   -slave string
         Expose metrics from slave running on this URL
+  -strictMode
+        Use strict mode authentication
   -timeout duration
-        Master polling timeout (default 5s)
-  -username string
-        Username to use for HTTP or strict mode authentication
-  -password string
-        Password to use for HTTP or strict mode authentication
-  -loginURL
-        URL for strict mode authentication (default https://leader.mesos/acs/api/v1/auth/login).
+        Master polling timeout (default 10s)
   -trustedCerts string
         Comma-separated list of certificates (.pem files) trusted for requests to Mesos endpoints
-  -strictMode
-        Enable strict mode API authentication
-  -privateKey
-        Private key used for strict mode authentication. This must be provided
-        when using strict mode. However, it can be read from the environment if the secret store is used. 
-  -skipSSLVerify
-        Disable SSL certificate verification
+  -username string
+        Username for authentication
+  -version
+        Show version
 ```
+
 When using HTTP or strict mode authentication, the following values are read from the environment, if they are not specified at run time:
 - `MESOS_EXPORTER_USERNAME`
 - `MESOS_EXPORTER_PASSWORD`
 - `MESOS_EXPORTER_PRIVATE_KEY`
 
+When collecting metrics from the master, the `-enableMasterState`
+flag will enable the Mesos Exporter to fetch the master's
+[state](http://mesos.apache.org/documentation/latest/endpoints/master/state/)
+endpoint in order to publish metrics about the resources available
+on registered agents. In large clusters, polling this endpoint can
+degrade master performance. In this case, `-enableMasterState` can
+be disabled on the master exporter and equivalent metrics can be
+collected by running the Mesos Exporter on each agent.
+
+When `-enableMasterState` is true, the master exporter will publish
+the following additional metrics labeled agent ID:
+
+| mesos_slave_cpus |
+| mesos_slave_cpus_unreserved |
+| mesos_slave_cpus_used |
+| mesos_slave_disk_bytes |
+| mesos_slave_disk_unreserved_bytes |
+| mesos_slave_disk_used_bytes |
+| mesos_slave_mem_bytes |
+| mesos_slave_mem_unreserved_bytes|
+| mesos_slave_mem_used_bytes |
+| mesos_slave_ports |
+| mesos_slave_ports_unreserved |
+| mesos_slave_ports_used |
 
 ## Prometheus Configuration
 
