@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -67,10 +69,17 @@ func mkHTTPClient(url string, timeout time.Duration, auth authInfo, certPool *x5
 		http.Client{Timeout: timeout, Transport: transport, CheckRedirect: redirectFunc},
 		url,
 		auth,
+		"",
 	}
 
 	if auth.strictMode {
 		client.auth.signingKey = parsePrivateKey(client)
+	}
+
+	if version.Revision != "" {
+		client.userAgent = fmt.Sprintf("mesos_exporter/%s (%s)", version.Version, version.Revision)
+	} else {
+		client.userAgent = fmt.Sprintf("mesos_exporter/%s", version.Version)
 	}
 
 	return client
@@ -131,8 +140,15 @@ func main() {
 	logLevel := fs.String("logLevel", "error", "Log level")
 	privateKey := fs.String("privateKey", "", "File path to certificate for strict mode authentication")
 	skipSSLVerify := fs.Bool("skipSSLVerify", false, "Skip SSL certificate verification")
+	vers := fs.Bool("version", false, "Show version")
 
 	fs.Parse(os.Args[1:])
+
+	if *vers {
+		fmt.Println(version.Print("mesos_exporter"))
+		os.Exit(0)
+	}
+
 	if *masterURL != "" && *slaveURL != "" {
 		log.Fatal("Only -master or -slave can be given at a time")
 	}
@@ -146,6 +162,11 @@ func main() {
 		log.SetLevel(logrusLogLevel)
 		log.WithField("logLevel", *logLevel).Info("Changing log level")
 	}
+
+	log.Infoln("Starting mesos_exporter", version.Info())
+	log.Infoln("Build context", version.BuildContext())
+
+	prometheus.MustRegister(version.NewCollector("mesos_exporter"))
 
 	auth := authInfo{
 		strictMode:    *strictMode,
@@ -224,6 +245,7 @@ func main() {
 	}
 
 	log.Info("Listening and serving ...")
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
             <head><title>Mesos Exporter</title></head>

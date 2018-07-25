@@ -158,8 +158,9 @@ type authInfo struct {
 
 type httpClient struct {
 	http.Client
-	url  string
-	auth authInfo
+	url       string
+	auth      authInfo
+	userAgent string
 }
 
 type metricCollector struct {
@@ -217,6 +218,7 @@ func authToken(httpClient *httpClient) string {
 			}).Error("Error creating HTTP request")
 			return ""
 		}
+		req.Header.Add("User-Agent", httpClient.userAgent)
 		req.Header.Add("Content-Type", "application/json")
 		res, err := httpClient.Do(req)
 		if err != nil {
@@ -254,6 +256,7 @@ func (httpClient *httpClient) fetchAndDecode(endpoint string, target interface{}
 		}).Error("Error creating HTTP request")
 		return false
 	}
+	req.Header.Add("User-Agent", httpClient.userAgent)
 	if httpClient.auth.username != "" && httpClient.auth.password != "" {
 		req.SetBasicAuth(httpClient.auth.username, httpClient.auth.password)
 	}
