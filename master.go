@@ -396,7 +396,7 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			return nil
 		},
 
-		counter("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
+		gauge("master", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
 			running, ok := m["master/tasks_running"]
 			if !ok {
 				log.WithField("metric", "master/tasks_running").Warn(LogErrNotFoundInMap)
