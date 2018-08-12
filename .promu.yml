@@ -1,7 +1,7 @@
 go:
     cgo: true
 repository:
-    path: github.com/mesosphere/mesos_exporter
+    path: github.com/mesos/mesos_exporter
 build:
     flags: -a
 tarball:
