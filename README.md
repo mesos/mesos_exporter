@@ -1,6 +1,6 @@
 # Prometheus Mesos Exporter
 
-[![Build Status](https://travis-ci.org/mesosphere/mesos_exporter.svg?branch=master)](https://travis-ci.org/mesosphere/mesos_exporter)
+[![Build Status](https://travis-ci.org/mesos/mesos_exporter.svg?branch=master)](https://travis-ci.org/mesos/mesos_exporter)
 
 Exporter for Mesos master and agent metrics.
 
