@@ -303,21 +303,19 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				log.WithField("metric", "slave/tasks_killed").Warn(LogErrNotFoundInMap)
 			}
-			killing, ok := m["slave/tasks_killing"]
-			if !ok {
-				log.WithField("metric", "slave/tasks_killing").Warn(LogErrNotFoundInMap)
-			}
+
 			lost, ok := m["slave/tasks_lost"]
 			if !ok {
 				log.WithField("metric", "slave/tasks_lost").Warn(LogErrNotFoundInMap)
 			}
+
 			c.(*settableCounterVec).Set(errored, "errored")
 			c.(*settableCounterVec).Set(failed, "failed")
 			c.(*settableCounterVec).Set(finished, "finished")
 			c.(*settableCounterVec).Set(gone, "gone")
 			c.(*settableCounterVec).Set(killed, "killed")
-			c.(*settableCounterVec).Set(killing, "killing")
 			c.(*settableCounterVec).Set(lost, "lost")
+
 			return nil
 		},
 		counter("slave", "task_states_current", "Current number of tasks by state.", "state"): func(m metricMap, c prometheus.Collector) error {
@@ -333,9 +331,16 @@ func newSlaveCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				log.WithField("metric", "slave/tasks_starting").Warn(LogErrNotFoundInMap)
 			}
+			killing, ok := m["slave/tasks_killing"]
+			if !ok {
+				log.WithField("metric", "slave/tasks_killing").Warn(LogErrNotFoundInMap)
+			}
+
+			c.(*settableCounterVec).Set(killing, "killing")
 			c.(*settableCounterVec).Set(running, "running")
 			c.(*settableCounterVec).Set(staging, "staging")
 			c.(*settableCounterVec).Set(starting, "starting")
+
 			return nil
 		},
 
