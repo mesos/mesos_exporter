@@ -12,6 +12,10 @@ metrics from an agent.
 Usage of mesos_exporter:
   -addr string
         Address to listen on (default ":9105")
+  -clientCert string
+        Path to Mesos client TLS certificate (.pem file)
+  -clientKey string
+        Path to Mesos client TLS key file (.pem file)
   -exportedSlaveAttributes string
         Comma-separated list of slave attributes to include in the corresponding metric
   -exportedTaskLabels string
