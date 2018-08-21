@@ -61,7 +61,7 @@ func getX509ClientCertificates(certFile, keyFile string) []tls.Certificate {
 	return []tls.Certificate{cert}
 }
 
-func mkHttpClient(url string, timeout time.Duration, auth authInfo, certPool *x509.CertPool, certs []tls.Certificate) *httpClient {
+func mkHTTPClient(url string, timeout time.Duration, auth authInfo, certPool *x509.CertPool, certs []tls.Certificate) *httpClient {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			Certificates:       certs,
@@ -159,6 +159,7 @@ func main() {
 	privateKey := fs.String("privateKey", "", "File path to certificate for strict mode authentication")
 	skipSSLVerify := fs.Bool("skipSSLVerify", false, "Skip SSL certificate verification")
 	vers := fs.Bool("version", false, "Show version")
+	enableMasterState := fs.Bool("enableMasterState", true, "Enable collection from the master's /state endpoint")
 
 	fs.Parse(os.Args[1:])
 
@@ -233,20 +234,23 @@ func main() {
 
 	switch {
 	case *masterURL != "":
-		for _, f := range []func(*httpClient) prometheus.Collector{
-			newMasterCollector,
-			func(c *httpClient) prometheus.Collector {
-				return newMasterStateCollector(c, slaveAttributeLabels)
-			},
-		} {
-			c := f(mkHttpClient(*masterURL, *timeout, auth, certPool, certs))
-			if err := prometheus.Register(c); err != nil {
+		log.WithField("address", *addr).Info("Exposing master metrics")
+
+		if err := prometheus.Register(
+			newMasterCollector(mkHTTPClient(*masterURL, *timeout, auth, certPool, certs))); err != nil {
+			log.WithField("error", err).Fatal("Prometheus Register() error")
+		}
+
+		if *enableMasterState {
+			if err := prometheus.Register(
+				newMasterStateCollector(mkHTTPClient(*masterURL, *timeout, auth, certPool, certs), slaveAttributeLabels)); err != nil {
 				log.WithField("error", err).Fatal("Prometheus Register() error")
 			}
 		}
-		log.WithField("address", *addr).Info("Exposing master metrics")
 
 	case *slaveURL != "":
+		log.WithField("address", *addr).Info("Exposing slave metrics")
+
 		slaveCollectors := []func(*httpClient) prometheus.Collector{
 			func(c *httpClient) prometheus.Collector {
 				return newSlaveCollector(c)
@@ -260,12 +264,11 @@ func main() {
 		}
 
 		for _, f := range slaveCollectors {
-			c := f(mkHttpClient(*slaveURL, *timeout, auth, certPool, certs))
-			if err := prometheus.Register(c); err != nil {
+			if err := prometheus.Register(
+				f(mkHTTPClient(*slaveURL, *timeout, auth, certPool, certs))); err != nil {
 				log.WithField("error", err).Fatal("Prometheus Register() error")
 			}
 		}
-		log.WithField("address", *addr).Info("Exposing slave metrics")
 
 	default:
 		log.Fatal("Either -master or -slave is required")
@@ -282,6 +285,7 @@ func main() {
             </body>
             </html>`))
 	})
+
 	http.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.WithField("error", err).Fatal("listen and serve error")
