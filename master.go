@@ -376,23 +376,20 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				log.WithField("metric", "master/tasks_killed").Warn(LogErrNotFoundInMap)
 			}
-			killing, ok := m["master/tasks_killing"]
-			if !ok {
-				log.WithField("metric", "master/tasks_killing").Warn(LogErrNotFoundInMap)
-			}
 			lost, ok := m["master/tasks_lost"]
 			if !ok {
 				log.WithField("metric", "master/tasks_lost").Warn(LogErrNotFoundInMap)
 			}
+
 			c.(*settableCounterVec).Set(dropped, "dropped")
 			c.(*settableCounterVec).Set(errored, "errored")
 			c.(*settableCounterVec).Set(failed, "failed")
 			c.(*settableCounterVec).Set(finished, "finished")
-			c.(*settableCounterVec).Set(gone, "gone")
 			c.(*settableCounterVec).Set(goneByOperator, "gone_by_operator")
+			c.(*settableCounterVec).Set(gone, "gone")
 			c.(*settableCounterVec).Set(killed, "killed")
-			c.(*settableCounterVec).Set(killing, "killing")
 			c.(*settableCounterVec).Set(lost, "lost")
+
 			return nil
 		},
 
@@ -413,10 +410,18 @@ func newMasterCollector(httpClient *httpClient) prometheus.Collector {
 			if !ok {
 				log.WithField("metric", "master/tasks_unreachable").Warn(LogErrNotFoundInMap)
 			}
+
+			killing, ok := m["master/tasks_killing"]
+			if !ok {
+				log.WithField("metric", "master/tasks_killing").Warn(LogErrNotFoundInMap)
+			}
+
+			c.(*settableCounterVec).Set(killing, "killing")
 			c.(*settableCounterVec).Set(running, "running")
 			c.(*settableCounterVec).Set(staging, "staging")
 			c.(*settableCounterVec).Set(starting, "starting")
 			c.(*settableCounterVec).Set(unreachable, "unreachable")
+
 			return nil
 		},
 
