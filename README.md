@@ -65,6 +65,8 @@ collected by running the Mesos Exporter on each agent.
 When `-enableMasterState` is true, the master exporter will publish
 the following additional metrics labeled agent ID:
 
+| Metric Name |
+|-------------|
 | mesos_slave_cpus |
 | mesos_slave_cpus_unreserved |
 | mesos_slave_cpus_used |
