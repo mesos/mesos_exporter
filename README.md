@@ -63,7 +63,7 @@ be disabled on the master exporter and equivalent metrics can be
 collected by running the Mesos Exporter on each agent.
 
 When `-enableMasterState` is true, the master exporter will publish
-the following additional metrics labeled agent ID:
+the following additional metrics labeled with the agent ID:
 
 | Metric Name |
 |-------------|
