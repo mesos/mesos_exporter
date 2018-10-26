@@ -40,10 +40,10 @@ $ export PATH="$GOPATH/bin:$PATH"
 $ export GITHUB_TOKEN=xxxxxxxx
 $ go get -u github.com/aktau/github-release
 $ go get -u github.com/prometheus/promu
-$ crossbuild
-$ crossbuild tarballs
-$ checksum .tarballs
-$ release .tarballs
+$ promu crossbuild
+$ promu crossbuild tarballs
+$ promu checksum .tarballs
+$ promu release .tarballs
 ```
 
 Once this completes successfully, you can edit any release notes
