@@ -59,6 +59,6 @@ vet:
 
 staticcheck: $(STATICCHECK)
 	@echo ">> running staticcheck"
-	@$(STATICCHECK) $(pkgs)
+	@CGO_ENABLED=0 $(STATICCHECK) $(pkgs)
 
 .PHONY: all build format promu style tarball test vet staticcheck $(FIRST_GOPATH)/bin/promu $(FIRST_GOPATH)/bin/staticcheck
