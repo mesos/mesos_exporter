@@ -345,7 +345,7 @@ func getLabelValuesFromMap(labels prometheus.Labels, orderedLabelKeys []string) 
 
 var (
 	text             = regexp.MustCompile("^[-[:word:]/.]*$")
-	errDropAttribute = errors.New("Value neither scalar nor text")
+	errDropAttribute = errors.New("value neither scalar nor text")
 )
 
 // attributeString converts a text attribute in json.RawMessage to string.

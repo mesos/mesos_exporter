@@ -21,6 +21,6 @@ func Example_attributeString() {
 	// text <nil>
 	// 6 <nil>
 	// 9.3 <nil>
-	//  Value neither scalar nor text
-	//  Value neither scalar nor text
+	//  value neither scalar nor text
+	//  value neither scalar nor text
 }
