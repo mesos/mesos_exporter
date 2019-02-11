@@ -8,5 +8,5 @@ go:
 - "1.11.x"
 
 script:
-- go clean -x -cache -testcache || true
+- go clean -x -cache -testcache || go clean -x || true
 - make
